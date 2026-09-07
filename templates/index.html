@@ -1,0 +1,42 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ site_name }}</title><link rel="stylesheet" href="/static/style.css"></head><body><header><div><h1>🐻 {{ site_name }}</h1><p>필드보스 컷젠 + 주간 고정보스</p></div><button id="notify">🔔 알림 켜기</button></header><main><section class="card top"><input id="actor" placeholder="내 이름"><input id="pin" type="password" placeholder="공유 PIN"><button id="save">저장</button></section><p class="note">페이지를 열어둔 동안 10분·5분·1분·정각 알림을 확인합니다.</p><section id="list" class="grid"></section><section class="card"><details><summary>⚙️ 관리자: 보스 추가</summary><div class="admin"><input id="name" placeholder="보스명"><select id="kind"><option value="respawn">컷 후 리젠</option><option value="weekly">주간 고정</option></select><input id="hours" type="number" step="0.5" placeholder="젠 간격(시간)"><select id="weekday" class="hide"><option value="0">월</option><option value="1">화</option><option value="2">수</option><option value="3">목</option><option value="4">금</option><option value="5">토</option><option value="6">일</option></select><input id="ftime" type="time" value="12:30" class="hide"><button id="add">추가</button></div></details></section></main><div id="toast"></div><script>
+const DAYS=['월','화','수','목','금','토','일'], fired=new Set();
+const $=id=>document.getElementById(id); function toast(s){$('toast').textContent=s;$('toast').className='show';setTimeout(()=>$('toast').className='',1800)}
+function pad(n){return String(n).padStart(2,'0')} function fmt(i){if(!i)return '-';let d=new Date(i);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function rem(s){if(s==null)return '컷 미등록';let neg=s<0;s=Math.abs(s);let d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60),x=Math.floor(s%60);return (neg?'-':'')+(d?d+'일 ':'')+`${pad(h)}:${pad(m)}:${pad(x)}`}
+async function post(url,o){let f=new FormData();Object.entries(o).forEach(([k,v])=>f.append(k,v));let r=await fetch(url,{method:'POST',body:f});let j=await r.json();if(!r.ok)throw Error(j.message||'오류');return j}
+function ping(b,label){try{let c=new (AudioContext||webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.2)}catch(e){} if(Notification.permission==='granted')new Notification(`${b.name} ${label}`,{body:`예정 ${fmt(b.next_spawn)}`})}
+
+function rememberInputs(){
+  const vals={};
+  document.querySelectorAll('input[id^="c"]').forEach(el=>vals[el.id]=el.value);
+  return vals;
+}
+function restoreInputs(vals){
+  Object.entries(vals||{}).forEach(([id,v])=>{
+    const el=document.getElementById(id);
+    if(el && !el.value) el.value=v;
+  });
+}
+
+async function refresh(){let s=await fetch('/api/state').then(r=>r.json());$('list').innerHTML=s.bosses.map(b=>`<article class="card boss"><div class="head"><div><h2>${b.name}</h2><span>${b.kind==='respawn'?'컷 + '+(b.respawn_minutes/60)+'시간':`매주 ${DAYS[b.weekday]}요일 ${b.fixed_time}`}</span></div><button class="del" onclick="del(${b.id},'${b.name}')">삭제</button></div><div class="count">${rem(b.remain_seconds)}</div><div class="meta"><div>최근 컷<br><b>${fmt(b.last_cut)}</b></div><div>다음 젠<br><b>${fmt(b.next_spawn)}</b></div></div>${b.kind==='respawn'?`<div class="actions"><input id="c${b.id}" type="text" inputmode="numeric" maxlength="5" placeholder="19:11"><button onclick="cut(${b.id})">⚔️ 시간 등록</button><button class="ghost" onclick="cutNow(${b.id})">⚡ 지금 컷</button></div>`:''}</article>`).join('');let n=Date.now();for(let b of s.bosses){if(!b.next_spawn)continue;let sec=Math.round((new Date(b.next_spawn)-n)/1000);for(let a of [600,300,60,0])if(sec<=a&&sec>=a-2){let k=`${b.id}|${b.next_spawn}|${a}`;if(!fired.has(k)){fired.add(k);ping(b,a?`${a/60}분 전!`:'젠 시간!')}}}}
+async function cut(id){try{
+ let v=$('c'+id).value.trim();
+ if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(v))throw Error('시간을 19:11 형식으로 입력하세요.');
+ let n=new Date(), [h,m]=v.split(':').map(Number);
+ let d=new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,m,0,0);
+ if(d-n>12*60*60*1000)d.setDate(d.getDate()-1);
+ let local=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+ await post('/api/cut',{boss_id:id,killed_at:local,actor:localStorage.actor||'',pin:localStorage.pin||''});
+ $('c'+id).value='';toast('컷 등록 완료');refresh()
+}catch(e){toast(e.message)}}
+async function cutNow(id){try{
+ await post('/api/cut',{boss_id:id,killed_at:'',actor:localStorage.actor||'',pin:localStorage.pin||''});
+ toast('현재 시간으로 컷 등록 완료');refresh()
+}catch(e){toast(e.message)}}
+async function del(id,n){if(!confirm(n+' 삭제?'))return;try{await post('/api/delete',{boss_id:id,pin:localStorage.pin||''});refresh()}catch(e){toast(e.message)}}
+$('save').onclick=()=>{localStorage.actor=$('actor').value;localStorage.pin=$('pin').value;toast('저장 완료')};$('actor').value=localStorage.actor||'';$('pin').value=localStorage.pin||'';$('notify').onclick=async()=>toast(await Notification.requestPermission()==='granted'?'알림 허용됨':'알림 권한 필요');$('kind').onchange=()=>{let w=$('kind').value==='weekly';$('hours').classList.toggle('hide',w);$('weekday').classList.toggle('hide',!w);$('ftime').classList.toggle('hide',!w)};$('add').onclick=async()=>{try{await post('/api/add',{name:$('name').value,kind:$('kind').value,respawn_hours:$('hours').value,weekday:$('weekday').value,fixed_time:$('ftime').value,pin:localStorage.pin||''});$('name').value='';toast('추가 완료');refresh()}catch(e){toast(e.message)}};refresh();setInterval(()=>{
+  const a=document.activeElement;
+  const typing = a && (a.tagName==='INPUT' || a.tagName==='SELECT' || a.tagName==='TEXTAREA');
+  if(!typing) refresh();
+},1000);
+</script></body></html>

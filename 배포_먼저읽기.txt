@@ -1,0 +1,29 @@
+곰플레이어 로드나인 보스타이머 v5 - 인터넷 배포용
+===================================================
+
+권장 호스팅: Railway
+
+이 버전에서 추가된 내용
+- Railway 배포 설정(railway.json)
+- 서버의 PORT 환경변수 자동 사용
+- SQLite DB 저장 위치를 DATA_DIR 환경변수로 지정 가능
+- Railway Volume을 /data 에 연결하면 컷 기록이 재배포/재시작 후에도 유지됨
+
+Railway 설정값
+1. 프로젝트/서비스 배포 후 Variables:
+   DATA_DIR=/data
+
+2. Volume:
+   Mount Path=/data
+
+3. Start Command:
+   railway.json에 이미 들어 있음
+   python -m uvicorn app:app --host 0.0.0.0 --port $PORT
+
+4. Networking:
+   Generate Domain을 누르면 공개 주소가 생성됨.
+
+중요
+- Volume 없이 실행하면 서버 재배포 시 boss.db 데이터가 사라질 수 있습니다.
+- config.json 기본 PIN은 관리자 0000 / 길드원 1111입니다.
+  인터넷 공개 전에 반드시 변경하세요.
