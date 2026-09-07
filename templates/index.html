@@ -1,4 +1,51 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ site_name }}</title><link rel="stylesheet" href="/static/style.css"></head><body><header><div><h1>🐻 {{ site_name }}</h1><p>필드보스 컷젠 + 주간 고정보스</p></div><button id="notify">🔔 알림 켜기</button></header><main><section class="card top"><input id="actor" placeholder="내 이름"><input id="pin" type="password" placeholder="공유 PIN"><button id="save">저장</button></section><p class="note">페이지를 열어둔 동안 10분·5분·1분·정각 알림을 확인합니다.</p><section id="list" class="grid"></section><section class="card"><details><summary>⚙️ 관리자: 보스 추가</summary><div class="admin"><input id="name" placeholder="보스명"><select id="kind"><option value="respawn">컷 후 리젠</option><option value="weekly">주간 고정</option></select><input id="hours" type="number" step="0.5" placeholder="젠 간격(시간)"><select id="weekday" class="hide"><option value="0">월</option><option value="1">화</option><option value="2">수</option><option value="3">목</option><option value="4">금</option><option value="5">토</option><option value="6">일</option></select><input id="ftime" type="time" value="12:30" class="hide"><button id="add">추가</button></div></details></section></main><div id="toast"></div><script>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ site_name }}</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header>
+  <div class="brand">
+    <div class="bear">🐻</div>
+    <div><h1>{{ site_name }}</h1><p>필드보스 컷젠 + 주간 고정보스</p></div>
+  </div>
+  <button id="notify" class="notify">🔔 알림 켜기</button>
+</header>
+<main>
+  <section class="loginbar">
+    <input id="actor" placeholder="내 이름">
+    <input id="pin" type="password" placeholder="공유 PIN">
+    <button id="save">저장</button>
+    <span class="note">※ 페이지를 열어둔 동안 10분·5분·1분·정각 알림을 확인합니다.</span>
+  </section>
+
+  <section class="nextbox">
+    <div class="section-title"><div>🎯 <b>다음 보스</b> <span>곧 젠 되는 보스 TOP 3</span></div><small>실시간으로 갱신됩니다.</small></div>
+    <div id="top3" class="top3"></div>
+  </section>
+
+  <section class="allbox">
+    <div class="section-title"><div>⚔️ <b>전체 보스</b> <span>(다음 젠 시간 순)</span></div><small id="totalCount">총 0개</small></div>
+    <section id="list" class="bossrows"></section>
+  </section>
+
+  <section class="legend">
+    <span><i class="dot spawn-dot"></i>젠 타임(도달)</span>
+    <span><i class="dot urgent-dot"></i>10분 이하</span>
+    <span><i class="dot soon-dot"></i>1시간 이하</span>
+    <span><i class="dot normal-dot"></i>1시간 초과</span>
+  </section>
+
+  <section class="adminwrap">
+    <details><summary>⚙️ 관리자: 보스 추가</summary>
+      <div class="admin">
+        <input id="name" placeholder="보스명">
+        <select id="kind"><option value="respawn">컷 후 리젠</option><option value="weekly">주간 고정</option></select>
+        <input id="hours" type="number" step="0.5" placeholder="젠 간격(시간)">
+        <select id="weekday" class="hide"><option value="0">월</option><option value="1">화</option><option value="2">수</option><option value="3">목</option><option value="4">금</option><option value="5">토</option><option value="6">일</option></select>
+        <input id="ftime" type="time" value="12:30" class="hide">
+        <button id="add">추가</button>
+      </div>
+    </details>
+  </section>
+</main>
+<div id="toast"></div>
+<script>
 const DAYS=['월','화','수','목','금','토','일'], fired=new Set();
 const $=id=>document.getElementById(id); function toast(s){$('toast').textContent=s;$('toast').className='show';setTimeout(()=>$('toast').className='',1800)}
 function pad(n){return String(n).padStart(2,'0')} function fmt(i){if(!i)return '-';let d=new Date(i);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
@@ -18,7 +65,96 @@ function restoreInputs(vals){
   });
 }
 
-async function refresh(){let s=await fetch('/api/state').then(r=>r.json());$('list').innerHTML=s.bosses.map(b=>`<article class="card boss"><div class="head"><div><h2>${b.name}</h2><span>${b.kind==='respawn'?'컷 + '+(b.respawn_minutes/60)+'시간':`매주 ${DAYS[b.weekday]}요일 ${b.fixed_time}`}</span></div><button class="del" onclick="del(${b.id},'${b.name}')">삭제</button></div><div class="count">${rem(b.remain_seconds)}</div><div class="meta"><div>최근 컷<br><b>${fmt(b.last_cut)}</b></div><div>다음 젠<br><b>${fmt(b.next_spawn)}</b></div></div>${b.kind==='respawn'?`<div class="actions"><input id="c${b.id}" type="text" inputmode="numeric" maxlength="5" placeholder="19:11"><button onclick="cut(${b.id})">⚔️ 시간 등록</button><button class="ghost" onclick="cutNow(${b.id})">⚡ 지금 컷</button></div>`:''}</article>`).join('');let n=Date.now();for(let b of s.bosses){if(!b.next_spawn)continue;let sec=Math.round((new Date(b.next_spawn)-n)/1000);for(let a of [600,300,60,0])if(sec<=a&&sec>=a-2){let k=`${b.id}|${b.next_spawn}|${a}`;if(!fired.has(k)){fired.add(k);ping(b,a?`${a/60}분 전!`:'젠 시간!')}}}}
+
+function statusClass(sec){
+  if(sec==null) return 'waiting';
+  if(sec<=0) return 'spawn';
+  if(sec<=600) return 'urgent';
+  if(sec<=3600) return 'soon';
+  return 'normal';
+}
+function shortRemain(sec){
+  if(sec==null) return '컷 미등록';
+  if(sec<=0) return '🔥 젠 타임';
+  let d=Math.floor(sec/86400), r=sec%86400;
+  let h=Math.floor(r/3600), m=Math.floor((r%3600)/60);
+  if(d>0) return `${d}일 ${h}시간`;
+  if(h>0) return `${h}시간 ${m}분`;
+  return `${m}분 남음`;
+}
+function bossIcon(b){
+  return b.kind==='weekly' ? '👑' : '🛡️';
+}
+function ruleText(b){
+  return b.kind==='respawn' ? `컷 + ${b.respawn_minutes/60}시간` : `매주 ${DAYS[b.weekday]}요일 ${b.fixed_time}`;
+}
+
+async function refresh(){
+  let s=await fetch('/api/state').then(r=>r.json());
+
+  s.bosses.sort((a,b)=>{
+    const av=a.remain_seconds, bv=b.remain_seconds;
+    if(av==null && bv==null) return 0;
+    if(av==null) return 1;
+    if(bv==null) return -1;
+    if(av<0 && bv<0) return bv-av;
+    if(av<0) return -1;
+    if(bv<0) return 1;
+    return av-bv;
+  });
+
+  $('totalCount').textContent=`총 ${s.bosses.length}개`;
+
+  $('top3').innerHTML=s.bosses.filter(b=>b.next_spawn).slice(0,3).map((b,i)=>`
+    <article class="topcard ${statusClass(b.remain_seconds)}">
+      <div class="topicon">${bossIcon(b)}</div>
+      <div class="topmain">
+        <div class="topname">${b.name}</div>
+        <div class="topnext">다음 젠 <b>${fmt(b.next_spawn)}</b></div>
+        <div class="toprule">${ruleText(b)}</div>
+      </div>
+      <div class="topbadge">${shortRemain(b.remain_seconds)}</div>
+    </article>
+  `).join('');
+
+  $('list').innerHTML=s.bosses.map((b,idx)=>`
+    <article class="bossrow ${statusClass(b.remain_seconds)}">
+      <div class="rank">${idx+1}</div>
+      <div class="rowicon">${bossIcon(b)}</div>
+      <div class="rowname">
+        <b>${b.name}</b>
+        <span>${ruleText(b)}</span>
+      </div>
+      <div class="rowremain">${shortRemain(b.remain_seconds)}</div>
+      <div class="rowtimes">
+        <div>다음 젠 <b>${fmt(b.next_spawn)}</b></div>
+        <div>최근 컷 <b>${fmt(b.last_cut)}</b></div>
+      </div>
+      ${b.kind==='respawn'?`
+      <div class="rowactions">
+        <input id="c${b.id}" type="text" inputmode="numeric" maxlength="5" placeholder="19:11">
+        <button onclick="cut(${b.id})">⚔️ 시간 등록</button>
+        <button onclick="cutNow(${b.id})">⚡ 지금 컷</button>
+      </div>`:`<div class="rowactions fixed"><span>주간 고정 보스</span></div>`}
+      <button class="del" onclick="del(${b.id},'${b.name}')">삭제</button>
+    </article>
+  `).join('');
+
+  let n=Date.now();
+  for(let b of s.bosses){
+    if(!b.next_spawn) continue;
+    let sec=Math.round((new Date(b.next_spawn)-n)/1000);
+    for(let a of [600,300,60,0]){
+      if(sec<=a&&sec>=a-2){
+        let k=`${b.id}|${b.next_spawn}|${a}`;
+        if(!fired.has(k)){
+          fired.add(k);
+          ping(b,a?`${a/60}분 전!`:'젠 시간!');
+        }
+      }
+    }
+  }
+}
 async function cut(id){try{
  let v=$('c'+id).value.trim();
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(v))throw Error('시간을 19:11 형식으로 입력하세요.');
