@@ -1,4 +1,4 @@
-import json, sqlite3, hashlib
+import os, json, sqlite3, hashlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -8,7 +8,9 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 BASE=Path(__file__).resolve().parent
-DB_PATH=BASE/'boss.db'
+DATA_DIR=Path(os.getenv("DATA_DIR", str(BASE)))
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DB_PATH=DATA_DIR/'boss.db'
 CONFIG_PATH=BASE/'config.json'
 KST=ZoneInfo('Asia/Seoul')
 app=FastAPI(title='곰플레이어 로드나인 보스타이머')
