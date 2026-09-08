@@ -131,53 +131,334 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
   }
 }
 
-@media(max-width:560px){
-  header{padding:10px 11px}
-  .brand .bear{font-size:23px}
-  .brand h1{font-size:16px}
-  .brand p{font-size:9px}
-  .notify{font-size:12px;padding:8px 10px}
-  main{padding:8px}
-  .loginbar{grid-template-columns:1fr 1fr;gap:6px;padding:9px}
-  .loginbar input{min-width:0;padding:8px;font-size:12px}
-  .loginbar button{grid-column:1/-1;padding:8px}
-  .note{font-size:9px}
-  .nextbox,.allbox{padding:8px;margin-top:9px}
-  .section-title{margin-bottom:8px}
-  .section-title b{font-size:16px}
-  .section-title span,.section-title small{font-size:9px}
-  .top3{gap:6px}
-  .topcard{padding:7px;min-height:87px}
-  .topicon{font-size:24px}
-  .topname{font-size:13px}
-  .topnext{font-size:9px}
-  .topnext b{font-size:10px}
-  .toprule{font-size:8px}
-  .topbadge{font-size:10px;padding:5px}
 
-  .bossrows{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:7px;
+@media(max-width:560px){
+  /* ===== 모바일 전용 깔끔 버전 ===== */
+  body{
+    background:linear-gradient(180deg,#08131f 0,#07111b 100%);
   }
-  .bossrow{
-    grid-template-columns:24px 28px minmax(0,1fr) auto;
-    padding:7px;
+
+  header{
+    padding:8px 9px;
+    min-height:54px;
+    gap:7px;
+    border-bottom-color:#1f3449;
+  }
+  .brand{gap:7px;min-width:0}
+  .brand .bear{font-size:22px}
+  .brand h1{
+    font-size:15px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:230px;
+  }
+  .brand p{
+    margin-top:3px;
+    font-size:8px;
+    white-space:nowrap;
+  }
+  .notify{
+    flex:0 0 auto;
+    font-size:10px;
+    padding:7px 8px;
+    border-radius:8px;
+  }
+
+  main{padding:6px 6px 16px}
+
+  /* 이름/PIN 영역을 한 줄로 압축 */
+  .loginbar{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
     gap:5px;
+    padding:7px;
     border-radius:10px;
   }
-  .rank{width:23px;height:23px;font-size:10px;border-radius:7px}
-  .rowicon{font-size:21px}
-  .rowname b{font-size:13px}
-  .rowname span{font-size:8px}
-  .rowremain{font-size:12px;padding:6px 7px}
-  .rowtimes{font-size:9px}
-  .rowtimes b{font-size:10px}
-  .rowactions{gap:4px}
-  .rowactions input{padding:6px 7px;font-size:11px}
-  .rowactions button{padding:6px 4px;font-size:10px}
-  .del{font-size:10px;padding:5px 6px}
+  .loginbar input{
+    width:100%;
+    min-width:0;
+    padding:7px 8px;
+    font-size:11px;
+    border-radius:8px;
+  }
+  .loginbar button{
+    grid-column:auto;
+    padding:7px 9px;
+    font-size:10px;
+    border-radius:8px;
+  }
+  .note{display:none}
 
-  .legend{flex-wrap:wrap;gap:9px;padding:9px;font-size:10px}
-  .dot{width:11px;height:11px}
-  .admin{grid-template-columns:1fr}
+  .nextbox,.allbox{
+    padding:7px;
+    margin-top:7px;
+    border-radius:11px;
+  }
+  .section-title{
+    margin-bottom:7px;
+    gap:5px;
+  }
+  .section-title b{font-size:15px}
+  .section-title span{font-size:8px;margin-left:4px}
+  .section-title small{font-size:8px;margin-left:4px;white-space:nowrap}
+
+  /* TOP 3는 3개를 한 화면에서 바로 확인 */
+  .top3{gap:5px}
+  .topcard{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:3px;
+    min-width:0;
+    min-height:112px;
+    padding:7px 5px;
+    border-radius:9px;
+    text-align:center;
+    background:linear-gradient(180deg,#102033,#0b1825);
+  }
+  .topicon{
+    font-size:23px;
+    line-height:1;
+    margin-bottom:1px;
+  }
+  .topmain{min-width:0;width:100%}
+  .topname{
+    font-size:12px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topnext{
+    margin-top:4px;
+    font-size:8px;
+    line-height:1.25;
+    white-space:nowrap;
+  }
+  .topnext b{
+    display:block;
+    margin:1px 0 0;
+    font-size:9px;
+    white-space:nowrap;
+  }
+  .toprule{
+    margin-top:3px;
+    font-size:7.5px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topbadge{
+    order:-1;
+    align-self:center;
+    min-width:0;
+    max-width:100%;
+    margin-bottom:2px;
+    padding:5px 7px;
+    font-size:10px;
+    line-height:1;
+    border-radius:7px;
+    white-space:nowrap;
+  }
+
+  /* 전체 보스: 2열 유지 + 카드 정보 밀도 개선 */
+  .bossrows{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .bossrow{
+    grid-template-columns:22px 25px minmax(0,1fr) 23px;
+    grid-template-areas:
+      "rank icon name del"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+    gap:4px 5px;
+    padding:7px;
+    min-width:0;
+    border-radius:9px;
+    background:linear-gradient(180deg,#0e1c2b,#0a1622);
+    box-shadow:none;
+  }
+
+  .rank{
+    width:21px;
+    height:21px;
+    font-size:9px;
+    border-radius:6px;
+  }
+  .rowicon{
+    font-size:20px;
+    line-height:1;
+  }
+  .rowname{min-width:0}
+  .rowname b{
+    font-size:12px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .rowname span{
+    margin-top:2px;
+    font-size:7.5px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* 남은 시간을 가장 눈에 띄게 */
+  .rowremain{
+    width:100%;
+    padding:6px 5px;
+    font-size:12px;
+    line-height:1;
+    text-align:center;
+    justify-self:stretch;
+    border-radius:7px;
+    white-space:nowrap;
+    letter-spacing:-.2px;
+  }
+
+  /* 다음젠 우선, 최근컷은 작게 */
+  .rowtimes{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1px;
+    padding:1px 1px 0;
+    font-size:8px;
+    line-height:1.3;
+  }
+  .rowtimes div{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:4px;
+    min-width:0;
+  }
+  .rowtimes div:first-child{
+    color:#b9cadc;
+    font-weight:700;
+  }
+  .rowtimes div:last-child{
+    color:#72869c;
+  }
+  .rowtimes b{
+    margin-left:0;
+    font-size:9px;
+    white-space:nowrap;
+  }
+  .rowtimes div:first-child b{color:#fff}
+  .rowtimes div:last-child b{color:#9cb0c5}
+
+  /* 입력 + 버튼을 한 줄에 배치해서 카드 높이 축소 */
+  .rowactions{
+    grid-template-columns:minmax(42px,.9fr) 1.35fr .95fr;
+    gap:3px;
+    align-items:stretch;
+  }
+  .rowactions input{
+    grid-column:auto;
+    width:100%;
+    min-width:0;
+    padding:6px 4px;
+    font-size:9px;
+    text-align:center;
+    border-radius:6px;
+  }
+  .rowactions button{
+    min-width:0;
+    padding:6px 2px;
+    font-size:8.5px;
+    line-height:1.05;
+    border-radius:6px;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  .rowactions.fixed{
+    min-height:27px;
+    padding:6px;
+    font-size:8px;
+    line-height:1;
+    border-radius:6px;
+  }
+
+  /* 삭제는 작은 X 버튼으로 정리 */
+  .del{
+    width:23px;
+    height:23px;
+    padding:0;
+    font-size:0;
+    border-radius:6px;
+    justify-self:end;
+    background:#0a1520;
+  }
+  .del::before{
+    content:"×";
+    font-size:16px;
+    line-height:1;
+    color:#ff6878;
+  }
+
+  /* 상태 강조는 배지 중심으로, 카드 자체는 과하지 않게 */
+  .bossrow.soon,.bossrow.urgent,.bossrow.spawn{
+    box-shadow:none;
+  }
+  .bossrow.waiting{opacity:.88}
+
+  .legend{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px 10px;
+    margin-top:7px;
+    padding:7px;
+    border-radius:10px;
+    font-size:8px;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    margin-right:4px;
+  }
+
+  .adminwrap{
+    margin-top:7px;
+    padding:8px;
+    border-radius:10px;
+    font-size:10px;
+  }
+  .admin{
+    grid-template-columns:1fr;
+    gap:5px;
+    margin-top:8px;
+  }
+  .admin input,.admin select,.admin button{
+    padding:8px;
+    font-size:11px;
+  }
+
+  #toast{
+    bottom:12px;
+    max-width:88vw;
+    padding:8px 11px;
+    font-size:11px;
+    border-radius:8px;
+    text-align:center;
+  }
+}
+
+/* 아주 좁은 외부화면에서는 버튼만 2줄로 안전하게 */
+@media(max-width:360px){
+  .brand h1{max-width:185px}
+  .notify{font-size:0;padding:7px}
+  .notify::before{content:"🔔";font-size:14px}
+
+  .rowactions{
+    grid-template-columns:1fr 1fr;
+  }
+  .rowactions input{
+    grid-column:1/-1;
+  }
 }
