@@ -20,6 +20,18 @@
   </section>
 
   <section class="allbox">
+    <div class="mobile-tools">
+      <div class="tabs">
+        <button class="tab active" data-filter="all">전체 <em id="tabAllCount">0</em></button>
+        <button class="tab" data-filter="respawn">필드보스</button>
+        <button class="tab" data-filter="weekly">주간보스</button>
+        <button class="tab" data-filter="favorite">★ 즐겨찾기</button>
+      </div>
+      <div class="searchbox">
+        <span>⌕</span>
+        <input id="bossSearch" type="search" placeholder="보스 이름 또는 위치로 검색...">
+      </div>
+    </div>
     <div class="section-title"><div>⚔️ <b>전체 보스</b> <span>(다음 젠 시간 순)</span></div><small id="totalCount">총 0개</small></div>
     <section id="list" class="bossrows"></section>
   </section>
@@ -47,11 +59,75 @@
 <div id="toast"></div>
 <script>
 const DAYS=['월','화','수','목','금','토','일'], fired=new Set();
+
+const BOSS_LOCATIONS={
+  '베나투스':'오염된분지',
+  '비오렌트':'초승달호수',
+  '클레멘티스':'오염된분지',
+  '에고':'율란협곡',
+  '리베라':'수호자의유적지',
+  '아라네오':'무덤1층',
+  '사피루스':'초승달호수',
+  '언두미엘':'비밀심험실',
+  '네우트로':'사막',
+  '레이디달리아':'황혼의구룽지',
+  '튀멜레':'황혼의구룽지',
+  '장군아쿨레우스':'무덤2층',
+  '아멘티스':'영광의땅',
+  '남작브라우드모어':'성전사격전지',
+  '밀라베':'무덤3층',
+  '와니타스':'혁명고원',
+  '메투스':'혁명고원',
+  '듀플리칸':'혁명고원',
+  '링고르':'성전사격전지',
+  '슈라이어':'전쟁폐허',
+  '로데릭':'수로1층',
+  '가레스':'죽대1층',
+  '티토르':'죽대2층',
+  '라르바':'전쟁폐허',
+  '아우라크':'수로2층',
+  '카테나':'죽대3층',
+  '세크레타':'억새',
+  '오르도':'억새',
+  '아스타':'억새',
+  '수포르':'억새',
+  '샤이프락':'억새',
+  '벤지':'바르바스',
+  '리비티나':'화산',
+  '라카제스':'화산',
+  '카밀리아':'숨실',
+  '익시온':'얼대',
+  '투미어':'수로3층',
+  '네루카스':'무덤4층'
+};
+
+let currentFilter='all';
+let currentSearch='';
+function bossLocation(name){ return BOSS_LOCATIONS[name] || '위치 미등록'; }
+function favoriteSet(){
+  try{return new Set(JSON.parse(localStorage.bossFavorites||'[]'))}
+  catch(e){return new Set()}
+}
+function isFavorite(id){return favoriteSet().has(String(id))}
+function toggleFavorite(id){
+  const s=favoriteSet(), k=String(id);
+  s.has(k)?s.delete(k):s.add(k);
+  localStorage.bossFavorites=JSON.stringify([...s]);
+  refresh();
+}
+function matchesBoss(b){
+  if(currentFilter==='respawn' && b.kind!=='respawn') return false;
+  if(currentFilter==='weekly' && b.kind!=='weekly') return false;
+  if(currentFilter==='favorite' && !isFavorite(b.id)) return false;
+  const q=currentSearch.trim().toLowerCase();
+  if(!q) return true;
+  return b.name.toLowerCase().includes(q) || bossLocation(b.name).toLowerCase().includes(q);
+}
 const $=id=>document.getElementById(id); function toast(s){$('toast').textContent=s;$('toast').className='show';setTimeout(()=>$('toast').className='',1800)}
 function pad(n){return String(n).padStart(2,'0')} function fmt(i){if(!i)return '-';let d=new Date(i);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
 function rem(s){if(s==null)return '컷 미등록';let neg=s<0;s=Math.abs(s);let d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60),x=Math.floor(s%60);return (neg?'-':'')+(d?d+'일 ':'')+`${pad(h)}:${pad(m)}:${pad(x)}`}
 async function post(url,o){let f=new FormData();Object.entries(o).forEach(([k,v])=>f.append(k,v));let r=await fetch(url,{method:'POST',body:f});let j=await r.json();if(!r.ok)throw Error(j.message||'오류');return j}
-function ping(b,label){try{let c=new (AudioContext||webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.2)}catch(e){} if(Notification.permission==='granted')new Notification(`${b.name} ${label}`,{body:`예정 ${fmt(b.next_spawn)}`})}
+function ping(b,label){try{let c=new (AudioContext||webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.2)}catch(e){} if(Notification.permission==='granted')new Notification(`${b.name} ${label}`,{body:`📍 ${bossLocation(b.name)} · 예정 ${fmt(b.next_spawn)}`})}
 
 function rememberInputs(){
   const vals={};
@@ -103,13 +179,12 @@ async function refresh(){
     return av-bv;
   });
 
-  $('totalCount').textContent=`총 ${s.bosses.length}개`;
-
   $('top3').innerHTML=s.bosses.filter(b=>b.next_spawn).slice(0,3).map((b,i)=>`
     <article class="topcard ${statusClass(b.remain_seconds)}">
       <div class="topicon">${bossIcon(b)}</div>
       <div class="topmain">
         <div class="topname">${b.name}</div>
+        <div class="toplocation">📍 ${bossLocation(b.name)}</div>
         <div class="topnext">다음 젠 <b>${fmt(b.next_spawn)}</b></div>
         <div class="toprule">${ruleText(b)}</div>
       </div>
@@ -117,14 +192,20 @@ async function refresh(){
     </article>
   `).join('');
 
-  $('list').innerHTML=s.bosses.map((b,idx)=>`
+  const visibleBosses=s.bosses.filter(matchesBoss);
+  $('tabAllCount').textContent=s.bosses.length;
+  $('totalCount').textContent=`총 ${visibleBosses.length}개`;
+
+  $('list').innerHTML=visibleBosses.map((b,idx)=>`
     <article class="bossrow ${statusClass(b.remain_seconds)}">
       <div class="rank">${idx+1}</div>
       <div class="rowicon">${bossIcon(b)}</div>
       <div class="rowname">
         <b>${b.name}</b>
-        <span>${ruleText(b)}</span>
+        <span class="rowlocation">📍 ${bossLocation(b.name)}</span>
+        <span class="rowrule">${ruleText(b)}</span>
       </div>
+      <button class="fav ${isFavorite(b.id)?'on':''}" onclick="toggleFavorite(${b.id})" title="즐겨찾기">${isFavorite(b.id)?'★':'☆'}</button>
       <div class="rowremain">${shortRemain(b.remain_seconds)}</div>
       <div class="rowtimes">
         <div>다음 젠 <b>${fmt(b.next_spawn)}</b></div>
@@ -170,6 +251,18 @@ async function cutNow(id){try{
  toast('현재 시간으로 컷 등록 완료');refresh()
 }catch(e){toast(e.message)}}
 async function del(id,n){if(!confirm(n+' 삭제?'))return;try{await post('/api/delete',{boss_id:id,pin:localStorage.pin||''});refresh()}catch(e){toast(e.message)}}
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter=btn.dataset.filter;
+    refresh();
+  };
+});
+$('bossSearch').addEventListener('input',e=>{
+  currentSearch=e.target.value;
+  refresh();
+});
 $('save').onclick=()=>{localStorage.actor=$('actor').value;localStorage.pin=$('pin').value;toast('저장 완료')};$('actor').value=localStorage.actor||'';$('pin').value=localStorage.pin||'';$('notify').onclick=async()=>toast(await Notification.requestPermission()==='granted'?'알림 허용됨':'알림 권한 필요');$('kind').onchange=()=>{let w=$('kind').value==='weekly';$('hours').classList.toggle('hide',w);$('weekday').classList.toggle('hide',!w);$('ftime').classList.toggle('hide',!w)};$('add').onclick=async()=>{try{await post('/api/add',{name:$('name').value,kind:$('kind').value,respawn_hours:$('hours').value,weekday:$('weekday').value,fixed_time:$('ftime').value,pin:localStorage.pin||''});$('name').value='';toast('추가 완료');refresh()}catch(e){toast(e.message)}};refresh();setInterval(()=>{
   const a=document.activeElement;
   const typing = a && (a.tagName==='INPUT' || a.tagName==='SELECT' || a.tagName==='TEXTAREA');
