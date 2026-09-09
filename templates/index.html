@@ -1,271 +1,868 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ site_name }}</title><link rel="stylesheet" href="/static/style.css"></head><body>
-<header>
-  <div class="brand">
-    <div class="bear">🐻</div>
-    <div><h1>{{ site_name }}</h1><p>필드보스 컷젠 + 주간 고정보스</p></div>
-  </div>
-  <button id="notify" class="notify">🔔 알림 켜기</button>
-</header>
-<main>
-  <section class="loginbar">
-    <input id="actor" placeholder="내 이름">
-    <input id="pin" type="password" placeholder="공유 PIN">
-    <button id="save">저장</button>
-    <span class="note">※ 페이지를 열어둔 동안 10분·5분·1분·정각 알림을 확인합니다.</span>
-  </section>
-
-  <section class="nextbox">
-    <div class="section-title"><div>🎯 <b>다음 보스</b> <span>곧 젠 되는 보스 TOP 3</span></div><small>실시간으로 갱신됩니다.</small></div>
-    <div id="top3" class="top3"></div>
-  </section>
-
-  <section class="allbox">
-    <div class="mobile-tools">
-      <div class="tabs">
-        <button class="tab active" data-filter="all">전체 <em id="tabAllCount">0</em></button>
-        <button class="tab" data-filter="respawn">필드보스</button>
-        <button class="tab" data-filter="weekly">주간보스</button>
-        <button class="tab" data-filter="favorite">★ 즐겨찾기</button>
-      </div>
-      <div class="searchbox">
-        <span>⌕</span>
-        <input id="bossSearch" type="search" placeholder="보스 이름 또는 위치로 검색...">
-      </div>
-    </div>
-    <div class="section-title"><div>⚔️ <b>전체 보스</b> <span>(다음 젠 시간 순)</span></div><small id="totalCount">총 0개</small></div>
-    <section id="list" class="bossrows"></section>
-  </section>
-
-  <section class="legend">
-    <span><i class="dot spawn-dot"></i>젠 타임(도달)</span>
-    <span><i class="dot urgent-dot"></i>10분 이하</span>
-    <span><i class="dot soon-dot"></i>1시간 이하</span>
-    <span><i class="dot normal-dot"></i>1시간 초과</span>
-  </section>
-
-  <section class="adminwrap">
-    <details><summary>⚙️ 관리자: 보스 추가</summary>
-      <div class="admin">
-        <input id="name" placeholder="보스명">
-        <select id="kind"><option value="respawn">컷 후 리젠</option><option value="weekly">주간 고정</option></select>
-        <input id="hours" type="number" step="0.5" placeholder="젠 간격(시간)">
-        <select id="weekday" class="hide"><option value="0">월</option><option value="1">화</option><option value="2">수</option><option value="3">목</option><option value="4">금</option><option value="5">토</option><option value="6">일</option></select>
-        <input id="ftime" type="time" value="12:30" class="hide">
-        <button id="add">추가</button>
-      </div>
-    </details>
-  </section>
-</main>
-<div id="toast"></div>
-<script>
-const DAYS=['월','화','수','목','금','토','일'], fired=new Set();
-
-const BOSS_LOCATIONS={
-  '베나투스':'오염된분지',
-  '비오렌트':'초승달호수',
-  '클레멘티스':'오염된분지',
-  '에고':'율란협곡',
-  '리베라':'수호자의유적지',
-  '아라네오':'무덤1층',
-  '사피루스':'초승달호수',
-  '언두미엘':'비밀심험실',
-  '네우트로':'사막',
-  '레이디달리아':'황혼의구룽지',
-  '튀멜레':'황혼의구룽지',
-  '장군아쿨레우스':'무덤2층',
-  '아멘티스':'영광의땅',
-  '남작브라우드모어':'성전사격전지',
-  '밀라베':'무덤3층',
-  '와니타스':'혁명고원',
-  '메투스':'혁명고원',
-  '듀플리칸':'혁명고원',
-  '링고르':'성전사격전지',
-  '슈라이어':'전쟁폐허',
-  '로데릭':'수로1층',
-  '가레스':'죽대1층',
-  '티토르':'죽대2층',
-  '라르바':'전쟁폐허',
-  '아우라크':'수로2층',
-  '카테나':'죽대3층',
-  '세크레타':'억새',
-  '오르도':'억새',
-  '아스타':'억새',
-  '수포르':'억새',
-  '샤이프락':'억새',
-  '벤지':'바르바스',
-  '리비티나':'화산',
-  '라카제스':'화산',
-  '카밀리아':'숨실',
-  '익시온':'얼대',
-  '투미어':'수로3층',
-  '네루카스':'무덤4층'
-};
-
-let currentFilter='all';
-let currentSearch='';
-function bossLocation(name){ return BOSS_LOCATIONS[name] || '위치 미등록'; }
-function favoriteSet(){
-  try{return new Set(JSON.parse(localStorage.bossFavorites||'[]'))}
-  catch(e){return new Set()}
+*{box-sizing:border-box}
+:root{
+  --bg:#08111c;--panel:#0f1a28;--panel2:#111f30;--line:#29415d;
+  --text:#f7f8fb;--muted:#9cb0c8;--gold:#f0bd4e;--gold2:#ffd76a;
+  --red:#ff4d5f;--orange:#ff6b18;--blue:#3f6da9;
 }
-function isFavorite(id){return favoriteSet().has(String(id))}
-function toggleFavorite(id){
-  const s=favoriteSet(), k=String(id);
-  s.has(k)?s.delete(k):s.add(k);
-  localStorage.bossFavorites=JSON.stringify([...s]);
-  refresh();
-}
-function matchesBoss(b){
-  if(currentFilter==='respawn' && b.kind!=='respawn') return false;
-  if(currentFilter==='weekly' && b.kind!=='weekly') return false;
-  if(currentFilter==='favorite' && !isFavorite(b.id)) return false;
-  const q=currentSearch.trim().toLowerCase();
-  if(!q) return true;
-  return b.name.toLowerCase().includes(q) || bossLocation(b.name).toLowerCase().includes(q);
-}
-const $=id=>document.getElementById(id); function toast(s){$('toast').textContent=s;$('toast').className='show';setTimeout(()=>$('toast').className='',1800)}
-function pad(n){return String(n).padStart(2,'0')} function fmt(i){if(!i)return '-';let d=new Date(i);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
-function rem(s){if(s==null)return '컷 미등록';let neg=s<0;s=Math.abs(s);let d=Math.floor(s/86400);s%=86400;let h=Math.floor(s/3600);s%=3600;let m=Math.floor(s/60),x=Math.floor(s%60);return (neg?'-':'')+(d?d+'일 ':'')+`${pad(h)}:${pad(m)}:${pad(x)}`}
-async function post(url,o){let f=new FormData();Object.entries(o).forEach(([k,v])=>f.append(k,v));let r=await fetch(url,{method:'POST',body:f});let j=await r.json();if(!r.ok)throw Error(j.message||'오류');return j}
-function ping(b,label){try{let c=new (AudioContext||webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.2)}catch(e){} if(Notification.permission==='granted')new Notification(`${b.name} ${label}`,{body:`📍 ${bossLocation(b.name)} · 예정 ${fmt(b.next_spawn)}`})}
+body{margin:0;background:radial-gradient(circle at 50% -20%,#13263d 0,#08111c 48%,#06101a 100%);color:var(--text);font-family:system-ui,-apple-system,"Pretendard","Noto Sans KR",sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:16px max(16px,calc((100% - 1180px)/2));background:rgba(7,15,25,.94);backdrop-filter:blur(12px);border-bottom:1px solid #22374d}
+.brand{display:flex;gap:10px;align-items:center}.bear{font-size:30px}.brand h1{margin:0;font-size:25px;line-height:1.05}.brand h1::first-letter{color:#fff}.brand p{margin:5px 0 0;font-size:12px;color:var(--muted)}
+.notify{padding:12px 18px;border-radius:12px}
+main{max-width:1180px;margin:auto;padding:14px 16px 24px}
+button,input,select{font:inherit;border-radius:10px;border:1px solid #2a4058;background:#0c1724;color:#fff}
+button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900;padding:10px 14px;cursor:pointer}
+.loginbar{display:grid;grid-template-columns:220px 220px auto 1fr;gap:10px;align-items:center;padding:13px 15px;border:1px solid #27405b;border-radius:14px;background:rgba(14,27,42,.88)}
+.loginbar input{padding:11px 13px}.note{font-size:12px;color:#b4c2d2;text-align:right}
 
-function rememberInputs(){
-  const vals={};
-  document.querySelectorAll('input[id^="c"]').forEach(el=>vals[el.id]=el.value);
-  return vals;
-}
-function restoreInputs(vals){
-  Object.entries(vals||{}).forEach(([id,v])=>{
-    const el=document.getElementById(id);
-    if(el && !el.value) el.value=v;
-  });
-}
+.nextbox,.allbox,.legend,.adminwrap{margin-top:14px;border:1px solid #29415d;border-radius:14px;background:rgba(13,25,39,.92)}
+.nextbox,.allbox{padding:14px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-title b{font-size:22px}.section-title span,.section-title small{color:#9db0c6;font-size:12px;margin-left:8px}
+.top3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.topcard{display:grid;grid-template-columns:58px 1fr auto;gap:12px;align-items:center;min-height:112px;padding:13px;border:1px solid #31567a;border-radius:12px;background:linear-gradient(180deg,#102134,#0c1927)}
+.topicon{font-size:36px;text-align:center}.topname{font-size:20px;font-weight:900}.topnext{font-size:13px;color:#a8bad0;margin-top:6px}.topnext b{color:#fff;font-size:15px;margin-left:5px}.toprule{margin-top:5px;color:var(--gold2);font-size:12px}.topbadge{min-width:105px;text-align:center;padding:10px 12px;border-radius:10px;background:#2f5383;font-weight:900;font-size:15px}
+
+.bossrows{display:flex;flex-direction:column;gap:8px}
+.bossrow{display:grid;grid-template-columns:38px 48px 175px 140px 190px minmax(300px,1fr) 56px;gap:10px;align-items:center;padding:11px 12px;border:1px solid #29415d;border-radius:12px;background:linear-gradient(180deg,#0f1d2c,#0c1825)}
+.rank{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:#07101a;font-weight:900;color:#dce8f7}
+.rowicon{font-size:30px;text-align:center}.rowname b{display:block;font-size:18px}.rowname span{display:block;color:var(--gold2);font-size:11px;margin-top:3px}
+.rowremain{font-size:18px;font-weight:900;padding:9px 10px;text-align:center;border-radius:10px;background:#294b78}
+.rowtimes{font-size:12px;color:#9db0c6;line-height:1.65}.rowtimes b{color:#fff;font-size:13px;margin-left:7px}
+.rowactions{display:grid;grid-template-columns:110px auto auto;gap:7px}.rowactions input{min-width:0;padding:9px 10px}.rowactions button{white-space:nowrap;padding:9px 11px}.rowactions.fixed{display:block;color:#8499b1;font-size:12px}
+.del{background:#0b1724;color:#ff6a79;border-color:#30465e;padding:9px 10px}
+
+.legend{display:flex;gap:26px;align-items:center;padding:12px 16px;color:#bcc9d8;font-size:12px}
+.dot{display:inline-block;width:15px;height:15px;border-radius:50%;margin-right:7px;vertical-align:-2px}.spawn-dot{background:var(--red)}.urgent-dot{background:var(--orange)}.soon-dot{background:#ffd05a}.normal-dot{background:#37649b}
+.adminwrap{padding:12px 14px}.adminwrap summary{cursor:pointer;font-weight:800}.admin{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:8px;margin-top:12px}.admin input,.admin select{padding:10px}.hide{display:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:white;color:#111;padding:10px 14px;border-radius:10px;opacity:0;z-index:20;font-weight:800}#toast.show{opacity:1}
+
+/* 상태 강조 */
+.soon{border-color:#d7aa42!important;box-shadow:0 0 0 1px rgba(255,207,84,.15)}
+.soon .rowremain,.soon .topbadge{background:#e8b943;color:#15100a}
+.urgent{border-color:#ff7a22!important;box-shadow:0 0 20px rgba(255,102,0,.12)}
+.urgent .rowremain,.urgent .topbadge{background:#ff5f21;color:#fff}
+.spawn{border-color:#ff4456!important;box-shadow:0 0 24px rgba(255,68,86,.16);background:linear-gradient(180deg,#24151c,#15121a)}
+.spawn .rowremain,.spawn .topbadge{background:#ff3f52;color:#fff}
+.waiting{opacity:.72}
 
 
-function statusClass(sec){
-  if(sec==null) return 'waiting';
-  if(sec<=0) return 'spawn';
-  if(sec<=600) return 'urgent';
-  if(sec<=3600) return 'soon';
-  return 'normal';
-}
-function shortRemain(sec){
-  if(sec==null) return '컷 미등록';
-  if(sec<=0) return '🔥 젠 타임';
-  let d=Math.floor(sec/86400), r=sec%86400;
-  let h=Math.floor(r/3600), m=Math.floor((r%3600)/60);
-  if(d>0) return `${d}일 ${h}시간`;
-  if(h>0) return `${h}시간 ${m}분`;
-  return `${m}분 남음`;
-}
-function bossIcon(b){
-  return b.kind==='weekly' ? '👑' : '🛡️';
-}
-function ruleText(b){
-  return b.kind==='respawn' ? `컷 + ${b.respawn_minutes/60}시간` : `매주 ${DAYS[b.weekday]}요일 ${b.fixed_time}`;
-}
+@media(max-width:900px){
+  .brand h1{font-size:20px}.notify{padding:10px 12px}
+  .loginbar{grid-template-columns:1fr 1fr auto}.note{grid-column:1/-1;text-align:left}
+  .top3{grid-template-columns:repeat(3,1fr)}
+  .topcard{grid-template-columns:38px 1fr;gap:7px;min-height:94px;padding:9px}
+  .topicon{font-size:27px}.topname{font-size:16px}.topnext{font-size:11px}.topnext b{font-size:12px}
+  .toprule{font-size:10px}.topbadge{grid-column:1/-1;min-width:0;padding:6px 7px;font-size:12px}
 
-async function refresh(){
-  let s=await fetch('/api/state').then(r=>r.json());
-
-  s.bosses.sort((a,b)=>{
-    const av=a.remain_seconds, bv=b.remain_seconds;
-    if(av==null && bv==null) return 0;
-    if(av==null) return 1;
-    if(bv==null) return -1;
-    if(av<0 && bv<0) return bv-av;
-    if(av<0) return -1;
-    if(bv<0) return 1;
-    return av-bv;
-  });
-
-  $('top3').innerHTML=s.bosses.filter(b=>b.next_spawn).slice(0,3).map((b,i)=>`
-    <article class="topcard ${statusClass(b.remain_seconds)}">
-      <div class="topicon">${bossIcon(b)}</div>
-      <div class="topmain">
-        <div class="topname">${b.name}</div>
-        <div class="toplocation">📍 ${bossLocation(b.name)}</div>
-        <div class="topnext">다음 젠 <b>${fmt(b.next_spawn)}</b></div>
-        <div class="toprule">${ruleText(b)}</div>
-      </div>
-      <div class="topbadge">${shortRemain(b.remain_seconds)}</div>
-    </article>
-  `).join('');
-
-  const visibleBosses=s.bosses.filter(matchesBoss);
-  $('tabAllCount').textContent=s.bosses.length;
-  $('totalCount').textContent=`총 ${visibleBosses.length}개`;
-
-  $('list').innerHTML=visibleBosses.map((b,idx)=>`
-    <article class="bossrow ${statusClass(b.remain_seconds)}">
-      <div class="rank">${idx+1}</div>
-      <div class="rowicon">${bossIcon(b)}</div>
-      <div class="rowname">
-        <b>${b.name}</b>
-        <span class="rowlocation">📍 ${bossLocation(b.name)}</span>
-        <span class="rowrule">${ruleText(b)}</span>
-      </div>
-      <button class="fav ${isFavorite(b.id)?'on':''}" onclick="toggleFavorite(${b.id})" title="즐겨찾기">${isFavorite(b.id)?'★':'☆'}</button>
-      <div class="rowremain">${shortRemain(b.remain_seconds)}</div>
-      <div class="rowtimes">
-        <div>다음 젠 <b>${fmt(b.next_spawn)}</b></div>
-        <div>최근 컷 <b>${fmt(b.last_cut)}</b></div>
-      </div>
-      ${b.kind==='respawn'?`
-      <div class="rowactions">
-        <input id="c${b.id}" type="text" inputmode="numeric" maxlength="5" placeholder="19:11">
-        <button onclick="cut(${b.id})">⚔️ 시간 등록</button>
-        <button onclick="cutNow(${b.id})">⚡ 지금 컷</button>
-      </div>`:`<div class="rowactions fixed"><span>주간 고정 보스</span></div>`}
-      <button class="del" onclick="del(${b.id},'${b.name}')">삭제</button>
-    </article>
-  `).join('');
-
-  let n=Date.now();
-  for(let b of s.bosses){
-    if(!b.next_spawn) continue;
-    let sec=Math.round((new Date(b.next_spawn)-n)/1000);
-    for(let a of [600,300,60,0]){
-      if(sec<=a&&sec>=a-2){
-        let k=`${b.id}|${b.next_spawn}|${a}`;
-        if(!fired.has(k)){
-          fired.add(k);
-          ping(b,a?`${a/60}분 전!`:'젠 시간!');
-        }
-      }
-    }
+  .bossrows{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .bossrow{
+    display:grid;
+    grid-template-columns:28px 34px minmax(0,1fr) auto;
+    grid-template-areas:
+      "rank icon name del"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+    gap:6px;
+    align-items:center;
+    padding:9px;
+    min-width:0;
+  }
+  .rank{grid-area:rank;width:27px;height:27px;font-size:12px}
+  .rowicon{grid-area:icon;font-size:24px}
+  .rowname{grid-area:name;min-width:0}
+  .rowname b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rowname span{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rowremain{
+    grid-area:remain;
+    justify-self:start;
+    font-size:14px;
+    line-height:1;
+    padding:7px 9px;
+    white-space:nowrap;
+  }
+  .rowtimes{
+    grid-area:times;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1px;
+    font-size:10px;
+    line-height:1.4;
+    min-width:0;
+  }
+  .rowtimes div{display:flex;justify-content:space-between;gap:6px}
+  .rowtimes b{font-size:11px;margin-left:0;white-space:nowrap}
+  .rowactions{
+    grid-area:actions;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    min-width:0;
+  }
+  .rowactions input{
+    grid-column:1/-1;
+    width:100%;
+    min-width:0;
+    padding:7px 8px;
+    font-size:12px;
+  }
+  .rowactions button{
+    padding:7px 5px;
+    font-size:11px;
+    white-space:nowrap;
+  }
+  .rowactions.fixed{
+    grid-area:actions;
+    text-align:center;
+    padding:7px;
+    border-radius:8px;
+    background:#0a1521;
+    font-size:10px;
+  }
+  .del{
+    grid-area:del;
+    padding:6px 7px;
+    font-size:11px;
+    justify-self:end;
   }
 }
-async function cut(id){try{
- let v=$('c'+id).value.trim();
- if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(v))throw Error('시간을 19:11 형식으로 입력하세요.');
- let n=new Date(), [h,m]=v.split(':').map(Number);
- let d=new Date(n.getFullYear(),n.getMonth(),n.getDate(),h,m,0,0);
- if(d-n>12*60*60*1000)d.setDate(d.getDate()-1);
- let local=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
- await post('/api/cut',{boss_id:id,killed_at:local,actor:localStorage.actor||'',pin:localStorage.pin||''});
- $('c'+id).value='';toast('컷 등록 완료');refresh()
-}catch(e){toast(e.message)}}
-async function cutNow(id){try{
- await post('/api/cut',{boss_id:id,killed_at:'',actor:localStorage.actor||'',pin:localStorage.pin||''});
- toast('현재 시간으로 컷 등록 완료');refresh()
-}catch(e){toast(e.message)}}
-async function del(id,n){if(!confirm(n+' 삭제?'))return;try{await post('/api/delete',{boss_id:id,pin:localStorage.pin||''});refresh()}catch(e){toast(e.message)}}
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter=btn.dataset.filter;
-    refresh();
-  };
-});
-$('bossSearch').addEventListener('input',e=>{
-  currentSearch=e.target.value;
-  refresh();
-});
-$('save').onclick=()=>{localStorage.actor=$('actor').value;localStorage.pin=$('pin').value;toast('저장 완료')};$('actor').value=localStorage.actor||'';$('pin').value=localStorage.pin||'';$('notify').onclick=async()=>toast(await Notification.requestPermission()==='granted'?'알림 허용됨':'알림 권한 필요');$('kind').onchange=()=>{let w=$('kind').value==='weekly';$('hours').classList.toggle('hide',w);$('weekday').classList.toggle('hide',!w);$('ftime').classList.toggle('hide',!w)};$('add').onclick=async()=>{try{await post('/api/add',{name:$('name').value,kind:$('kind').value,respawn_hours:$('hours').value,weekday:$('weekday').value,fixed_time:$('ftime').value,pin:localStorage.pin||''});$('name').value='';toast('추가 완료');refresh()}catch(e){toast(e.message)}};refresh();setInterval(()=>{
-  const a=document.activeElement;
-  const typing = a && (a.tagName==='INPUT' || a.tagName==='SELECT' || a.tagName==='TEXTAREA');
-  if(!typing) refresh();
-},1000);
-</script></body></html>
+
+
+@media(max-width:560px){
+  /* ===== 모바일 전용 깔끔 버전 ===== */
+  body{
+    background:linear-gradient(180deg,#08131f 0,#07111b 100%);
+  }
+
+  header{
+    padding:8px 9px;
+    min-height:54px;
+    gap:7px;
+    border-bottom-color:#1f3449;
+  }
+  .brand{gap:7px;min-width:0}
+  .brand .bear{font-size:22px}
+  .brand h1{
+    font-size:15px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:230px;
+  }
+  .brand p{
+    margin-top:3px;
+    font-size:8px;
+    white-space:nowrap;
+  }
+  .notify{
+    flex:0 0 auto;
+    font-size:10px;
+    padding:7px 8px;
+    border-radius:8px;
+  }
+
+  main{padding:6px 6px 16px}
+
+  /* 이름/PIN 영역을 한 줄로 압축 */
+  .loginbar{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+    gap:5px;
+    padding:7px;
+    border-radius:10px;
+  }
+  .loginbar input{
+    width:100%;
+    min-width:0;
+    padding:7px 8px;
+    font-size:11px;
+    border-radius:8px;
+  }
+  .loginbar button{
+    grid-column:auto;
+    padding:7px 9px;
+    font-size:10px;
+    border-radius:8px;
+  }
+  .note{display:none}
+
+  .nextbox,.allbox{
+    padding:7px;
+    margin-top:7px;
+    border-radius:11px;
+  }
+  .section-title{
+    margin-bottom:7px;
+    gap:5px;
+  }
+  .section-title b{font-size:15px}
+  .section-title span{font-size:8px;margin-left:4px}
+  .section-title small{font-size:8px;margin-left:4px;white-space:nowrap}
+
+  /* TOP 3는 3개를 한 화면에서 바로 확인 */
+  .top3{gap:5px}
+  .topcard{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+    gap:3px;
+    min-width:0;
+    min-height:112px;
+    padding:7px 5px;
+    border-radius:9px;
+    text-align:center;
+    background:linear-gradient(180deg,#102033,#0b1825);
+  }
+  .topicon{
+    font-size:23px;
+    line-height:1;
+    margin-bottom:1px;
+  }
+  .topmain{min-width:0;width:100%}
+  .topname{
+    font-size:12px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topnext{
+    margin-top:4px;
+    font-size:8px;
+    line-height:1.25;
+    white-space:nowrap;
+  }
+  .topnext b{
+    display:block;
+    margin:1px 0 0;
+    font-size:9px;
+    white-space:nowrap;
+  }
+  .toprule{
+    margin-top:3px;
+    font-size:7.5px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topbadge{
+    order:-1;
+    align-self:center;
+    min-width:0;
+    max-width:100%;
+    margin-bottom:2px;
+    padding:5px 7px;
+    font-size:10px;
+    line-height:1;
+    border-radius:7px;
+    white-space:nowrap;
+  }
+
+  /* 전체 보스: 2열 유지 + 카드 정보 밀도 개선 */
+  .bossrows{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+  }
+  .bossrow{
+    grid-template-columns:22px 25px minmax(0,1fr) 23px;
+    grid-template-areas:
+      "rank icon name del"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+    gap:4px 5px;
+    padding:7px;
+    min-width:0;
+    border-radius:9px;
+    background:linear-gradient(180deg,#0e1c2b,#0a1622);
+    box-shadow:none;
+  }
+
+  .rank{
+    width:21px;
+    height:21px;
+    font-size:9px;
+    border-radius:6px;
+  }
+  .rowicon{
+    font-size:20px;
+    line-height:1;
+  }
+  .rowname{min-width:0}
+  .rowname b{
+    font-size:12px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .rowname span{
+    margin-top:2px;
+    font-size:7.5px;
+    line-height:1.15;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* 남은 시간을 가장 눈에 띄게 */
+  .rowremain{
+    width:100%;
+    padding:6px 5px;
+    font-size:12px;
+    line-height:1;
+    text-align:center;
+    justify-self:stretch;
+    border-radius:7px;
+    white-space:nowrap;
+    letter-spacing:-.2px;
+  }
+
+  /* 다음젠 우선, 최근컷은 작게 */
+  .rowtimes{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1px;
+    padding:1px 1px 0;
+    font-size:8px;
+    line-height:1.3;
+  }
+  .rowtimes div{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:4px;
+    min-width:0;
+  }
+  .rowtimes div:first-child{
+    color:#b9cadc;
+    font-weight:700;
+  }
+  .rowtimes div:last-child{
+    color:#72869c;
+  }
+  .rowtimes b{
+    margin-left:0;
+    font-size:9px;
+    white-space:nowrap;
+  }
+  .rowtimes div:first-child b{color:#fff}
+  .rowtimes div:last-child b{color:#9cb0c5}
+
+  /* 입력 + 버튼을 한 줄에 배치해서 카드 높이 축소 */
+  .rowactions{
+    grid-template-columns:minmax(42px,.9fr) 1.35fr .95fr;
+    gap:3px;
+    align-items:stretch;
+  }
+  .rowactions input{
+    grid-column:auto;
+    width:100%;
+    min-width:0;
+    padding:6px 4px;
+    font-size:9px;
+    text-align:center;
+    border-radius:6px;
+  }
+  .rowactions button{
+    min-width:0;
+    padding:6px 2px;
+    font-size:8.5px;
+    line-height:1.05;
+    border-radius:6px;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+  .rowactions.fixed{
+    min-height:27px;
+    padding:6px;
+    font-size:8px;
+    line-height:1;
+    border-radius:6px;
+  }
+
+  /* 삭제는 작은 X 버튼으로 정리 */
+  .del{
+    width:23px;
+    height:23px;
+    padding:0;
+    font-size:0;
+    border-radius:6px;
+    justify-self:end;
+    background:#0a1520;
+  }
+  .del::before{
+    content:"×";
+    font-size:16px;
+    line-height:1;
+    color:#ff6878;
+  }
+
+  /* 상태 강조는 배지 중심으로, 카드 자체는 과하지 않게 */
+  .bossrow.soon,.bossrow.urgent,.bossrow.spawn{
+    box-shadow:none;
+  }
+  .bossrow.waiting{opacity:.88}
+
+  .legend{
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px 10px;
+    margin-top:7px;
+    padding:7px;
+    border-radius:10px;
+    font-size:8px;
+  }
+  .dot{
+    width:9px;
+    height:9px;
+    margin-right:4px;
+  }
+
+  .adminwrap{
+    margin-top:7px;
+    padding:8px;
+    border-radius:10px;
+    font-size:10px;
+  }
+  .admin{
+    grid-template-columns:1fr;
+    gap:5px;
+    margin-top:8px;
+  }
+  .admin input,.admin select,.admin button{
+    padding:8px;
+    font-size:11px;
+  }
+
+  #toast{
+    bottom:12px;
+    max-width:88vw;
+    padding:8px 11px;
+    font-size:11px;
+    border-radius:8px;
+    text-align:center;
+  }
+}
+
+/* 아주 좁은 외부화면에서는 버튼만 2줄로 안전하게 */
+@media(max-width:360px){
+  .brand h1{max-width:185px}
+  .notify{font-size:0;padding:7px}
+  .notify::before{content:"🔔";font-size:14px}
+
+  .rowactions{
+    grid-template-columns:1fr 1fr;
+  }
+  .rowactions input{
+    grid-column:1/-1;
+  }
+}
+
+
+/* ===== 보스 위치 + 모바일 UX 확장 패치 ===== */
+.mobile-tools{display:none}
+.toplocation{
+  margin-top:4px;
+  color:#ff7180;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.rowname .rowlocation{
+  display:block;
+  margin-top:3px;
+  color:#ff7180;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.rowname .rowrule{
+  display:block;
+  color:var(--gold2);
+  font-size:10px;
+  margin-top:2px;
+}
+.fav{
+  display:none;
+  background:transparent;
+  border:0;
+  color:#6d86a2;
+  padding:0;
+  font-size:20px;
+  line-height:1;
+}
+.fav.on{color:#ffd13f}
+
+@media(max-width:900px){
+  .bossrow{
+    grid-template-columns:28px 34px minmax(0,1fr) auto;
+    grid-template-areas:
+      "rank icon name fav"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+  }
+  .fav{
+    display:block;
+    grid-area:fav;
+    justify-self:end;
+    align-self:start;
+  }
+  .del{display:none}
+  .toplocation{font-size:9px}
+  .rowname .rowlocation{font-size:9px}
+  .rowname .rowrule{font-size:8px}
+}
+
+@media(max-width:560px){
+  .mobile-tools{
+    display:block;
+    margin-bottom:8px;
+  }
+  .tabs{
+    display:grid;
+    grid-template-columns:1.15fr 1fr 1fr 1.15fr;
+    gap:3px;
+    padding:3px;
+    border:1px solid #2b455f;
+    border-radius:9px;
+    background:#091522;
+  }
+  .tabs .tab{
+    min-width:0;
+    padding:7px 3px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:#a9bbcf;
+    font-size:9px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .tabs .tab em{
+    font-style:normal;
+    margin-left:2px;
+  }
+  .tabs .tab.active{
+    background:#1386f2;
+    color:#fff;
+    box-shadow:0 0 12px rgba(19,134,242,.22);
+  }
+  .searchbox{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:6px;
+    padding:0 8px;
+    border:1px solid #2b455f;
+    border-radius:8px;
+    background:#091522;
+  }
+  .searchbox span{
+    color:#7fa6ca;
+    font-size:17px;
+    line-height:1;
+  }
+  .searchbox input{
+    width:100%;
+    min-width:0;
+    padding:8px 0;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#fff;
+    font-size:10px;
+  }
+  .searchbox input::placeholder{color:#6f8298}
+
+  .topcard{min-height:128px}
+  .toplocation{
+    margin-top:3px;
+    color:#ff6575;
+    font-size:8px;
+    font-weight:900;
+  }
+
+  .bossrow{
+    grid-template-columns:20px 24px minmax(0,1fr) 20px;
+    grid-template-areas:
+      "rank icon name fav"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+    padding:7px;
+  }
+  .fav{
+    display:block;
+    width:20px;
+    height:20px;
+    font-size:17px;
+    justify-self:end;
+    align-self:start;
+  }
+
+  .rowname b{font-size:12px}
+  .rowname .rowlocation{
+    margin-top:3px;
+    color:#ff6978;
+    font-size:9px;
+    font-weight:900;
+  }
+  .rowname .rowrule{
+    margin-top:2px;
+    color:#7f93a9;
+    font-size:7px;
+    font-weight:600;
+  }
+
+  /* 이미지 예시처럼 남은 시간은 위치 아래 큼직하게 */
+  .rowremain{
+    margin-top:1px;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .allbox .section-title{
+    margin-top:7px;
+  }
+}
+
+/* 화면이 매우 좁아도 위치/보스명이 깨지지 않도록 */
+@media(max-width:360px){
+  .tabs .tab{font-size:8px;padding:6px 2px}
+  .rowname .rowlocation{font-size:8px}
+}
+
+
+/* ============================================================
+   PC 8열 정렬 최종 수정
+   실제 순서:
+   1 순번 / 2 아이콘 / 3 보스정보 / 4 즐겨찾기 /
+   5 남은시간 / 6 다음젠·최근컷 / 7 시간등록 액션 / 8 삭제
+   ============================================================ */
+@media (min-width:901px){
+
+  .bossrows{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+  }
+
+  .bossrow{
+    display:grid !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+
+    /* 실제 자식 8개와 정확히 1:1 대응 */
+    grid-template-columns:
+      34px
+      40px
+      minmax(120px,1.10fr)
+      48px
+      minmax(110px,.85fr)
+      minmax(145px,1fr)
+      minmax(240px,1.35fr)
+      48px !important;
+
+    grid-template-areas:none !important;
+    gap:8px !important;
+    align-items:center !important;
+    padding:10px 10px !important;
+    overflow:hidden !important;
+  }
+
+  .bossrow > *{
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    position:static !important;
+    transform:none !important;
+    float:none !important;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+
+  .rank{
+    width:30px !important;
+    height:30px !important;
+    justify-self:center !important;
+  }
+
+  .rowicon{
+    font-size:27px !important;
+    justify-self:center !important;
+  }
+
+  .rowname{
+    min-width:0 !important;
+  }
+
+  .rowname b{
+    font-size:15px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .rowname .rowlocation{
+    display:block !important;
+    font-size:9px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .rowname .rowrule{
+    display:block !important;
+    font-size:8px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .fav{
+    display:block !important;
+    width:42px !important;
+    height:34px !important;
+    padding:0 !important;
+    justify-self:center !important;
+    font-size:17px !important;
+    border:1px solid #2b455f !important;
+    border-radius:8px !important;
+    background:#0b1723 !important;
+  }
+
+  .rowremain{
+    width:100% !important;
+    min-width:0 !important;
+    padding:9px 6px !important;
+    font-size:14px !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+  }
+
+  .rowtimes{
+    min-width:0 !important;
+    font-size:9px !important;
+    line-height:1.45 !important;
+  }
+
+  .rowtimes div{
+    display:flex !important;
+    align-items:center !important;
+    gap:5px !important;
+    min-width:0 !important;
+  }
+
+  .rowtimes b{
+    margin-left:0 !important;
+    font-size:10px !important;
+    white-space:nowrap !important;
+  }
+
+  /* 시간 입력 + 시간등록 + 지금컷 = 7번째 열 안에서만 표시 */
+  .rowactions{
+    display:grid !important;
+    grid-template-columns:
+      minmax(58px,.72fr)
+      minmax(78px,1fr)
+      minmax(70px,.9fr) !important;
+    gap:5px !important;
+
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+    align-items:center !important;
+  }
+
+  .rowactions input{
+    grid-column:auto !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    padding:8px 4px !important;
+    font-size:10px !important;
+    text-align:center !important;
+  }
+
+  .rowactions button{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    padding:8px 3px !important;
+    font-size:10px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+
+  .rowactions.fixed{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:100% !important;
+    min-height:34px !important;
+    padding:6px !important;
+    font-size:9px !important;
+    color:#8499b1 !important;
+    background:#0a1521 !important;
+    border-radius:8px !important;
+  }
+
+  .del{
+    display:block !important;
+    width:44px !important;
+    padding:8px 3px !important;
+    justify-self:center !important;
+    font-size:10px !important;
+  }
+}
+
+/* 조금 좁은 PC/노트북에서도 8열 유지 */
+@media (min-width:901px) and (max-width:1100px){
+  .bossrow{
+    grid-template-columns:
+      30px
+      34px
+      minmax(105px,1fr)
+      42px
+      minmax(96px,.8fr)
+      minmax(125px,.95fr)
+      minmax(205px,1.25fr)
+      42px !important;
+    gap:6px !important;
+    padding:9px 7px !important;
+  }
+
+  .rowactions{
+    grid-template-columns:
+      minmax(50px,.7fr)
+      minmax(66px,1fr)
+      minmax(60px,.9fr) !important;
+    gap:4px !important;
+  }
+
+  .rowactions input,
+  .rowactions button{
+    font-size:9px !important;
+    padding:7px 2px !important;
+  }
+
+  .rowname b{font-size:13px !important}
+  .rowremain{font-size:12px !important}
+  .rowtimes,.rowtimes b{font-size:8px !important}
+}
