@@ -1,3 +1,4 @@
+
 *{box-sizing:border-box}
 :root{
   --bg:#08111c;--panel:#0f1a28;--panel2:#111f30;--line:#29415d;
@@ -640,4 +641,274 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
 @media(max-width:360px){
   .tabs .tab{font-size:8px;padding:6px 2px}
   .rowname .rowlocation{font-size:8px}
+}
+
+
+/* ===== PC 전용 정렬 개선 ===== */
+@media(min-width:901px){
+  main{
+    max-width:1180px;
+    margin:0 auto;
+  }
+
+  .bossrows{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .bossrow{
+    display:grid;
+    grid-template-columns:
+      34px
+      42px
+      minmax(190px,1.45fr)
+      140px
+      155px
+      140px
+      116px
+      56px
+      280px;
+    grid-template-areas:
+      "rank icon name remain times times fixed fav actions";
+    align-items:center;
+    gap:10px;
+    min-height:72px;
+    padding:10px 12px;
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  .rank{
+    grid-area:rank;
+    width:30px;
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    justify-self:center;
+  }
+
+  .rowicon{
+    grid-area:icon;
+    justify-self:center;
+    font-size:28px;
+    line-height:1;
+  }
+
+  .rowname{
+    grid-area:name;
+    min-width:0;
+  }
+
+  .rowname b{
+    display:block;
+    font-size:16px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .rowname .rowlocation{
+    display:block;
+    margin-top:4px;
+    font-size:11px;
+    line-height:1.15;
+    color:#ff6c7a;
+    font-weight:800;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .rowname .rowrule{
+    display:block;
+    margin-top:3px;
+    font-size:10px;
+    line-height:1.15;
+    color:var(--gold2);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .rowremain{
+    grid-area:remain;
+    justify-self:stretch;
+    text-align:center;
+    min-width:120px;
+    padding:9px 10px;
+    font-size:15px;
+    line-height:1;
+    border-radius:8px;
+    white-space:nowrap;
+  }
+
+  .rowtimes{
+    grid-area:times;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:3px;
+    min-width:0;
+    font-size:10px;
+    line-height:1.25;
+  }
+
+  .rowtimes div{
+    display:flex;
+    justify-content:flex-start;
+    gap:7px;
+    min-width:0;
+  }
+
+  .rowtimes b{
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  .rowactions{
+    grid-area:actions;
+    display:grid;
+    grid-template-columns:78px 1fr 1fr;
+    gap:7px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .rowactions input{
+    grid-column:auto;
+    width:78px;
+    min-width:78px;
+    padding:8px 7px;
+    font-size:12px;
+    text-align:center;
+  }
+
+  .rowactions button{
+    width:100%;
+    padding:9px 8px;
+    font-size:12px;
+    white-space:nowrap;
+  }
+
+  .rowactions.fixed{
+    grid-area:fixed;
+    justify-self:stretch;
+    text-align:center;
+    padding:8px 6px;
+    border-radius:8px;
+    font-size:10px;
+    line-height:1.2;
+    background:#0a1521;
+  }
+
+  .fav{
+    display:block;
+    grid-area:fav;
+    justify-self:center;
+    align-self:center;
+    width:42px;
+    height:36px;
+    border:1px solid #2b455f;
+    border-radius:8px;
+    font-size:18px;
+    background:#0b1723;
+  }
+
+  .del{
+    display:none !important;
+  }
+
+  .mobile-tools{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .mobile-tools .tabs{
+    display:flex;
+    gap:6px;
+    flex:0 0 auto;
+  }
+
+  .mobile-tools .tab{
+    min-width:105px;
+    padding:10px 14px;
+    border:1px solid #29455f;
+    border-radius:8px;
+    background:#0b1723;
+    color:#aebfd1;
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+
+  .mobile-tools .tab.active{
+    background:#137ff0;
+    color:#fff;
+    border-color:#137ff0;
+  }
+
+  .mobile-tools .searchbox{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:1;
+    max-width:380px;
+    margin-left:auto;
+    padding:0 10px;
+    border:1px solid #29455f;
+    border-radius:8px;
+    background:#0b1723;
+  }
+
+  .mobile-tools .searchbox input{
+    width:100%;
+    padding:10px 0;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#fff;
+    font-size:12px;
+  }
+
+  .allbox .section-title{
+    margin-bottom:10px;
+  }
+
+  /* PC에서는 삭제를 별도 관리자 영역에서만 다루도록 숨김 */
+  .bossrow .del{display:none !important}
+}
+
+@media(min-width:901px) and (max-width:1180px){
+  .bossrow{
+    grid-template-columns:
+      30px
+      36px
+      minmax(160px,1.2fr)
+      125px
+      140px
+      105px
+      48px
+      240px;
+    grid-template-areas:
+      "rank icon name remain times fixed fav actions";
+    gap:8px;
+    padding:9px 10px;
+  }
+
+  .rowactions{
+    grid-template-columns:70px 1fr 1fr;
+    gap:5px;
+  }
+
+  .rowactions input{
+    width:70px;
+    min-width:70px;
+  }
+
+  .rowname b{font-size:15px}
+  .rowremain{font-size:14px}
 }
