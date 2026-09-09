@@ -198,20 +198,18 @@ async function refresh(){
 
   $('list').innerHTML=visibleBosses.map((b,idx)=>`
     <article class="bossrow ${statusClass(b.remain_seconds)}">
-      <div class="rowmain">
-        <div class="rank">${idx+1}</div>
-        <div class="rowicon">${bossIcon(b)}</div>
-        <div class="rowname">
-          <b>${b.name}</b>
-          <span class="rowlocation">📍 ${bossLocation(b.name)}</span>
-          <span class="rowrule">${ruleText(b)}</span>
-        </div>
-        <div class="rowremain">${shortRemain(b.remain_seconds)}</div>
-        <div class="rowtimes">
-          <div>다음 젠 <b>${fmt(b.next_spawn)}</b></div>
-          <div>최근 컷 <b>${fmt(b.last_cut)}</b></div>
-        </div>
-        <button class="fav ${isFavorite(b.id)?'on':''}" onclick="toggleFavorite(${b.id})" title="즐겨찾기">${isFavorite(b.id)?'★':'☆'}</button>
+      <div class="rank">${idx+1}</div>
+      <div class="rowicon">${bossIcon(b)}</div>
+      <div class="rowname">
+        <b>${b.name}</b>
+        <span class="rowlocation">📍 ${bossLocation(b.name)}</span>
+        <span class="rowrule">${ruleText(b)}</span>
+      </div>
+      <button class="fav ${isFavorite(b.id)?'on':''}" onclick="toggleFavorite(${b.id})" title="즐겨찾기">${isFavorite(b.id)?'★':'☆'}</button>
+      <div class="rowremain">${shortRemain(b.remain_seconds)}</div>
+      <div class="rowtimes">
+        <div>다음 젠 <b>${fmt(b.next_spawn)}</b></div>
+        <div>최근 컷 <b>${fmt(b.last_cut)}</b></div>
       </div>
       ${b.kind==='respawn'?`
       <div class="rowactions">
