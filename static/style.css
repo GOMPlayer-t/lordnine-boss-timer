@@ -1071,195 +1071,136 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
 }
 
 
-/* ==========================================================
-   PC 최종 복구 패치
-   시간입력 / 시간등록 / 지금컷을 보스 카드 내부에 강제 배치
-   ========================================================== */
+/* ============================================================
+   PC 액션 영역 구조 수정 FINAL
+   ============================================================ */
 @media (min-width:901px){
-
-  /* 넓은 PC에서는 콘텐츠 자체도 화면을 더 활용 */
   main{
-    width:calc(100% - 28px) !important;
-    max-width:1420px !important;
+    width:calc(100% - 32px) !important;
+    max-width:1380px !important;
     margin:0 auto !important;
     padding-left:0 !important;
     padding-right:0 !important;
   }
 
-  .nextbox,
-  .allbox,
-  .bossrows{
+  .allbox,.bossrows{
     width:100% !important;
     max-width:100% !important;
     box-sizing:border-box !important;
   }
 
   .bossrow{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center !important;
+    gap:12px !important;
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
     box-sizing:border-box !important;
-    display:grid !important;
-
-    /* 딱 7개 영역만 사용.
-       주간보스도 마지막 actions 칸을 그대로 사용하므로
-       중간의 빈 fixed 열이 생기지 않음. */
-    grid-template-columns:
-      32px
-      38px
-      minmax(145px,1.25fr)
-      minmax(125px,.85fr)
-      minmax(185px,1.05fr)
-      44px
-      minmax(270px,1.45fr) !important;
-
-    grid-template-areas:
-      "rank icon name remain times fav actions" !important;
-
-    gap:8px !important;
-    align-items:center !important;
-    overflow:hidden !important;
     padding:10px 12px !important;
+    overflow:hidden !important;
   }
 
-  .bossrow > *{
+  .rowmain{
+    flex:1 1 auto !important;
     min-width:0 !important;
-    max-width:100% !important;
+    display:grid !important;
+    grid-template-columns:32px 38px minmax(150px,1fr) 150px 190px 44px !important;
+    grid-template-areas:"rank icon name remain times fav" !important;
+    align-items:center !important;
+    gap:8px !important;
     box-sizing:border-box !important;
   }
 
-  .rank{grid-area:rank !important}
-  .rowicon{grid-area:icon !important}
-  .rowname{grid-area:name !important}
-  .rowremain{grid-area:remain !important}
-  .rowtimes{grid-area:times !important}
-  .fav{grid-area:fav !important}
+  .rowmain .rank{grid-area:rank !important}
+  .rowmain .rowicon{grid-area:icon !important}
+  .rowmain .rowname{grid-area:name !important;min-width:0 !important}
+  .rowmain .rowremain{grid-area:remain !important;min-width:0 !important}
+  .rowmain .rowtimes{grid-area:times !important;min-width:0 !important}
+  .rowmain .fav{grid-area:fav !important}
 
-  /* respawn / weekly 모두 무조건 마지막 칸 */
-  .bossrow .rowactions,
-  .bossrow .rowactions.fixed{
-    grid-area:actions !important;
+  .bossrow > .rowactions{
+    flex:0 0 300px !important;
+    width:300px !important;
+    max-width:300px !important;
+    min-width:0 !important;
     position:static !important;
+    inset:auto !important;
     transform:none !important;
-    left:auto !important;
-    right:auto !important;
-    top:auto !important;
     margin:0 !important;
     float:none !important;
-    width:100% !important;
-    max-width:100% !important;
-    min-width:0 !important;
     box-sizing:border-box !important;
     overflow:hidden !important;
-    justify-self:stretch !important;
   }
 
-  .bossrow .rowactions:not(.fixed){
+  .bossrow > .rowactions:not(.fixed){
     display:grid !important;
-    grid-template-columns:
-      minmax(66px,.72fr)
-      minmax(88px,1fr)
-      minmax(78px,.9fr) !important;
+    grid-template-columns:82px 1fr 1fr !important;
     gap:6px !important;
     align-items:center !important;
   }
 
-  .bossrow .rowactions input{
-    grid-column:auto !important;
+  .bossrow > .rowactions input{
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
+    box-sizing:border-box !important;
     padding:8px 6px !important;
     font-size:11px !important;
     text-align:center !important;
-    box-sizing:border-box !important;
   }
 
-  .bossrow .rowactions button{
+  .bossrow > .rowactions button{
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
+    box-sizing:border-box !important;
     padding:8px 5px !important;
     font-size:11px !important;
     white-space:nowrap !important;
-    box-sizing:border-box !important;
   }
 
-  .bossrow .rowactions.fixed{
+  .bossrow > .rowactions.fixed{
     display:flex !important;
     align-items:center !important;
     justify-content:center !important;
     min-height:36px !important;
-    padding:7px 6px !important;
-    color:#8da0b5 !important;
-    background:#0a1521 !important;
+    padding:7px 8px !important;
     border-radius:8px !important;
+    background:#0a1521 !important;
+    color:#8ca0b6 !important;
     font-size:10px !important;
   }
 
-  /* PC에서는 삭제 버튼이 레이아웃을 밀지 않도록 감춤 */
-  .bossrow .del{
-    display:none !important;
-  }
+  .bossrow > .del{display:none !important}
 }
 
-/* 보통 노트북/브라우저 폭에서도 카드 밖으로 절대 못 나가게 */
-@media (min-width:901px) and (max-width:1180px){
-  main{
-    width:calc(100% - 20px) !important;
-  }
-
-  .bossrow{
-    grid-template-columns:
-      28px
-      32px
-      minmax(120px,1.1fr)
-      minmax(105px,.8fr)
-      minmax(150px,1fr)
-      38px
-      minmax(235px,1.35fr) !important;
+@media (min-width:901px) and (max-width:1100px){
+  .bossrow{gap:8px !important;padding:9px 8px !important}
+  .rowmain{
+    grid-template-columns:28px 32px minmax(115px,1fr) 118px 150px 38px !important;
     gap:6px !important;
-    padding:9px 8px !important;
   }
-
-  .rowname b{font-size:14px !important}
-  .rowremain{font-size:13px !important}
-  .rowtimes,
-  .rowtimes b{font-size:9px !important}
-
-  .bossrow .rowactions:not(.fixed){
-    grid-template-columns:
-      minmax(58px,.72fr)
-      minmax(76px,1fr)
-      minmax(68px,.9fr) !important;
+  .bossrow > .rowactions{
+    flex-basis:245px !important;
+    width:245px !important;
+    max-width:245px !important;
+  }
+  .bossrow > .rowactions:not(.fixed){
+    grid-template-columns:66px 1fr 1fr !important;
     gap:4px !important;
   }
-
-  .bossrow .rowactions input,
-  .bossrow .rowactions button{
+  .bossrow > .rowactions input,
+  .bossrow > .rowactions button{
     padding:7px 3px !important;
     font-size:10px !important;
   }
+  .rowname b{font-size:14px !important}
+  .rowremain{font-size:13px !important}
+  .rowtimes,.rowtimes b{font-size:9px !important}
 }
 
-/* 아주 좁은 PC 폭에서는 액션만 2단으로 바꿔서 안전하게 수납 */
-@media (min-width:901px) and (max-width:1000px){
-  .bossrow{
-    grid-template-columns:
-      26px
-      28px
-      minmax(105px,1fr)
-      minmax(96px,.75fr)
-      minmax(130px,.95fr)
-      34px
-      minmax(170px,1.1fr) !important;
-  }
-
-  .bossrow .rowactions:not(.fixed){
-    grid-template-columns:1fr 1fr !important;
-  }
-
-  .bossrow .rowactions input{
-    grid-column:1 / -1 !important;
-  }
+@media (max-width:900px){
+  .rowmain{display:contents !important}
 }
