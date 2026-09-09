@@ -46,7 +46,7 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
 .waiting{opacity:.72}
 
 
-@media(max-width:700px){
+@media(max-width:900px){
   .brand h1{font-size:20px}.notify{padding:10px 12px}
   .loginbar{grid-template-columns:1fr 1fr auto}.note{grid-column:1/-1;text-align:left}
   .top3{grid-template-columns:repeat(3,1fr)}
@@ -502,7 +502,7 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
 }
 .fav.on{color:#ffd13f}
 
-@media(max-width:700px){
+@media(max-width:900px){
   .bossrow{
     grid-template-columns:28px 34px minmax(0,1fr) auto;
     grid-template-areas:
@@ -644,135 +644,148 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
 
 
 /* ============================================================
-   PC 정상복구 FINAL
-   - 모바일 전환 기준을 700px 이하로 낮춤
-   - PC 브라우저 확대/창크기에서도 모바일 카드 CSS가 발동하지 않음
-   - 시간입력 / 시간등록 / 지금컷을 카드 내부 마지막 열에 고정
+   PC 8열 정렬 최종 수정
+   실제 순서:
+   1 순번 / 2 아이콘 / 3 보스정보 / 4 즐겨찾기 /
+   5 남은시간 / 6 다음젠·최근컷 / 7 시간등록 액션 / 8 삭제
    ============================================================ */
-@media (min-width:701px){
-
-  main{
-    width:calc(100% - 24px);
-    max-width:1380px;
-    margin:0 auto;
-    padding-left:0;
-    padding-right:0;
-  }
-
-  .allbox,
-  .bossrows,
-  .bossrow{
-    width:100%;
-    max-width:100%;
-    box-sizing:border-box;
-  }
+@media (min-width:901px){
 
   .bossrows{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
   }
 
   .bossrow{
     display:grid !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+
+    /* 실제 자식 8개와 정확히 1:1 대응 */
     grid-template-columns:
-      32px
-      38px
-      minmax(135px,1.15fr)
-      minmax(120px,.85fr)
-      minmax(170px,1fr)
-      minmax(250px,1.35fr)
-      46px !important;
+      34px
+      40px
+      minmax(120px,1.10fr)
+      48px
+      minmax(110px,.85fr)
+      minmax(145px,1fr)
+      minmax(240px,1.35fr)
+      48px !important;
+
     grid-template-areas:none !important;
     gap:8px !important;
     align-items:center !important;
-    padding:10px 12px !important;
+    padding:10px 10px !important;
     overflow:hidden !important;
   }
 
   .bossrow > *{
     min-width:0 !important;
+    max-width:100% !important;
     box-sizing:border-box !important;
+    position:static !important;
+    transform:none !important;
+    float:none !important;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
   }
 
   .rank{
-    width:30px;
-    height:30px;
-    justify-self:center;
+    width:30px !important;
+    height:30px !important;
+    justify-self:center !important;
   }
 
   .rowicon{
-    font-size:27px;
-    justify-self:center;
+    font-size:27px !important;
+    justify-self:center !important;
   }
 
   .rowname{
-    min-width:0;
+    min-width:0 !important;
   }
 
   .rowname b{
-    font-size:16px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    font-size:15px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
   }
 
   .rowname .rowlocation{
-    font-size:10px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    display:block !important;
+    font-size:9px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
   }
 
   .rowname .rowrule{
-    font-size:9px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    display:block !important;
+    font-size:8px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  .fav{
+    display:block !important;
+    width:42px !important;
+    height:34px !important;
+    padding:0 !important;
+    justify-self:center !important;
+    font-size:17px !important;
+    border:1px solid #2b455f !important;
+    border-radius:8px !important;
+    background:#0b1723 !important;
   }
 
   .rowremain{
+    width:100% !important;
     min-width:0 !important;
-    width:100%;
-    padding:9px 7px;
-    font-size:15px;
-    white-space:nowrap;
-    text-align:center;
+    padding:9px 6px !important;
+    font-size:14px !important;
+    text-align:center !important;
+    white-space:nowrap !important;
   }
 
   .rowtimes{
     min-width:0 !important;
-    font-size:10px;
-    line-height:1.45;
+    font-size:9px !important;
+    line-height:1.45 !important;
   }
 
   .rowtimes div{
-    display:flex;
-    gap:6px;
-    align-items:center;
-    min-width:0;
+    display:flex !important;
+    align-items:center !important;
+    gap:5px !important;
+    min-width:0 !important;
   }
 
   .rowtimes b{
-    font-size:11px;
-    margin-left:0;
-    white-space:nowrap;
+    margin-left:0 !important;
+    font-size:10px !important;
+    white-space:nowrap !important;
   }
 
-  /* 이 칸이 카드 내부의 액션 전용 열 */
+  /* 시간 입력 + 시간등록 + 지금컷 = 7번째 열 안에서만 표시 */
   .rowactions{
     display:grid !important;
-    grid-template-columns:minmax(64px,.72fr) minmax(82px,1fr) minmax(76px,.9fr) !important;
+    grid-template-columns:
+      minmax(58px,.72fr)
+      minmax(78px,1fr)
+      minmax(70px,.9fr) !important;
     gap:5px !important;
+
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
-    align-items:center !important;
-    position:static !important;
-    transform:none !important;
-    margin:0 !important;
-    float:none !important;
+    box-sizing:border-box !important;
     overflow:hidden !important;
+    align-items:center !important;
   }
 
   .rowactions input{
@@ -780,8 +793,9 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
-    padding:8px 5px !important;
-    font-size:11px !important;
+    box-sizing:border-box !important;
+    padding:8px 4px !important;
+    font-size:10px !important;
     text-align:center !important;
   }
 
@@ -789,62 +803,56 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
     width:100% !important;
     min-width:0 !important;
     max-width:100% !important;
-    padding:8px 4px !important;
-    font-size:11px !important;
+    box-sizing:border-box !important;
+    padding:8px 3px !important;
+    font-size:10px !important;
     white-space:nowrap !important;
+    overflow:hidden !important;
   }
 
   .rowactions.fixed{
     display:flex !important;
-    align-items:center;
-    justify-content:center;
-    min-height:36px;
-    padding:7px 6px !important;
-    font-size:10px !important;
-    background:#0a1521;
-    border-radius:8px;
-    color:#8499b1;
+    align-items:center !important;
+    justify-content:center !important;
+    width:100% !important;
+    min-height:34px !important;
+    padding:6px !important;
+    font-size:9px !important;
+    color:#8499b1 !important;
+    background:#0a1521 !important;
+    border-radius:8px !important;
   }
 
-  /* 즐겨찾기는 PC에서도 마지막 작은 칸 */
-  .fav{
-    display:block !important;
-    width:40px;
-    height:34px;
-    justify-self:center;
-    border:1px solid #2b455f;
-    border-radius:8px;
-    background:#0b1723;
-    font-size:17px;
-  }
-
-  /* 삭제버튼은 PC 카드 밖으로 밀리지 않도록 숨김 */
   .del{
-    display:none !important;
+    display:block !important;
+    width:44px !important;
+    padding:8px 3px !important;
+    justify-self:center !important;
+    font-size:10px !important;
   }
 }
 
-/* 보통 노트북/브라우저 폭 */
-@media (min-width:701px) and (max-width:1050px){
+/* 조금 좁은 PC/노트북에서도 8열 유지 */
+@media (min-width:901px) and (max-width:1100px){
   .bossrow{
     grid-template-columns:
-      28px
-      32px
+      30px
+      34px
       minmax(105px,1fr)
-      minmax(100px,.8fr)
-      minmax(135px,.95fr)
+      42px
+      minmax(96px,.8fr)
+      minmax(125px,.95fr)
       minmax(205px,1.25fr)
-      38px !important;
+      42px !important;
     gap:6px !important;
-    padding:9px 8px !important;
+    padding:9px 7px !important;
   }
 
-  .rowname b{font-size:14px}
-  .rowremain{font-size:13px;padding:8px 5px}
-  .rowtimes,.rowtimes b{font-size:9px}
-
   .rowactions{
-    grid-template-columns:minmax(52px,.7fr) minmax(70px,1fr) minmax(64px,.9fr) !important;
+    grid-template-columns:
+      minmax(50px,.7fr)
+      minmax(66px,1fr)
+      minmax(60px,.9fr) !important;
     gap:4px !important;
   }
 
@@ -854,14 +862,7 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
     padding:7px 2px !important;
   }
 
-  .fav{
-    width:34px;
-    height:31px;
-    font-size:15px;
-  }
-}
-
-/* 휴대폰은 기존 모바일 2열 레이아웃 유지 */
-@media (max-width:700px){
-  .bossrow .del{display:none !important}
+  .rowname b{font-size:13px !important}
+  .rowremain{font-size:12px !important}
+  .rowtimes,.rowtimes b{font-size:8px !important}
 }
