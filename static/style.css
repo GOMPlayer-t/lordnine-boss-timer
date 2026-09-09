@@ -462,3 +462,182 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
     grid-column:1/-1;
   }
 }
+
+
+/* ===== 보스 위치 + 모바일 UX 확장 패치 ===== */
+.mobile-tools{display:none}
+.toplocation{
+  margin-top:4px;
+  color:#ff7180;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.rowname .rowlocation{
+  display:block;
+  margin-top:3px;
+  color:#ff7180;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.rowname .rowrule{
+  display:block;
+  color:var(--gold2);
+  font-size:10px;
+  margin-top:2px;
+}
+.fav{
+  display:none;
+  background:transparent;
+  border:0;
+  color:#6d86a2;
+  padding:0;
+  font-size:20px;
+  line-height:1;
+}
+.fav.on{color:#ffd13f}
+
+@media(max-width:900px){
+  .bossrow{
+    grid-template-columns:28px 34px minmax(0,1fr) auto;
+    grid-template-areas:
+      "rank icon name fav"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+  }
+  .fav{
+    display:block;
+    grid-area:fav;
+    justify-self:end;
+    align-self:start;
+  }
+  .del{display:none}
+  .toplocation{font-size:9px}
+  .rowname .rowlocation{font-size:9px}
+  .rowname .rowrule{font-size:8px}
+}
+
+@media(max-width:560px){
+  .mobile-tools{
+    display:block;
+    margin-bottom:8px;
+  }
+  .tabs{
+    display:grid;
+    grid-template-columns:1.15fr 1fr 1fr 1.15fr;
+    gap:3px;
+    padding:3px;
+    border:1px solid #2b455f;
+    border-radius:9px;
+    background:#091522;
+  }
+  .tabs .tab{
+    min-width:0;
+    padding:7px 3px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:#a9bbcf;
+    font-size:9px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .tabs .tab em{
+    font-style:normal;
+    margin-left:2px;
+  }
+  .tabs .tab.active{
+    background:#1386f2;
+    color:#fff;
+    box-shadow:0 0 12px rgba(19,134,242,.22);
+  }
+  .searchbox{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:6px;
+    padding:0 8px;
+    border:1px solid #2b455f;
+    border-radius:8px;
+    background:#091522;
+  }
+  .searchbox span{
+    color:#7fa6ca;
+    font-size:17px;
+    line-height:1;
+  }
+  .searchbox input{
+    width:100%;
+    min-width:0;
+    padding:8px 0;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#fff;
+    font-size:10px;
+  }
+  .searchbox input::placeholder{color:#6f8298}
+
+  .topcard{min-height:128px}
+  .toplocation{
+    margin-top:3px;
+    color:#ff6575;
+    font-size:8px;
+    font-weight:900;
+  }
+
+  .bossrow{
+    grid-template-columns:20px 24px minmax(0,1fr) 20px;
+    grid-template-areas:
+      "rank icon name fav"
+      "remain remain remain remain"
+      "times times times times"
+      "actions actions actions actions";
+    padding:7px;
+  }
+  .fav{
+    display:block;
+    width:20px;
+    height:20px;
+    font-size:17px;
+    justify-self:end;
+    align-self:start;
+  }
+
+  .rowname b{font-size:12px}
+  .rowname .rowlocation{
+    margin-top:3px;
+    color:#ff6978;
+    font-size:9px;
+    font-weight:900;
+  }
+  .rowname .rowrule{
+    margin-top:2px;
+    color:#7f93a9;
+    font-size:7px;
+    font-weight:600;
+  }
+
+  /* 이미지 예시처럼 남은 시간은 위치 아래 큼직하게 */
+  .rowremain{
+    margin-top:1px;
+    font-size:12px;
+    font-weight:900;
+  }
+
+  .allbox .section-title{
+    margin-top:7px;
+  }
+}
+
+/* 화면이 매우 좁아도 위치/보스명이 깨지지 않도록 */
+@media(max-width:360px){
+  .tabs .tab{font-size:8px;padding:6px 2px}
+  .rowname .rowlocation{font-size:8px}
+}
