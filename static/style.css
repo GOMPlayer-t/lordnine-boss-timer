@@ -973,3 +973,65 @@ button{background:linear-gradient(#ffd269,#e3ad43);color:#171108;font-weight:900
     font-size:9px !important;
   }
 }
+
+
+/* ===== 보스 레벨 배지 ===== */
+.lvbadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:6px;
+  padding:2px 7px;
+  border:1px solid #31577a;
+  border-radius:999px;
+  background:#102a42;
+  color:#7fc6ff;
+  font-size:10px;
+  font-weight:900;
+  line-height:1.2;
+  vertical-align:middle;
+  white-space:nowrap;
+}
+.boss-title{
+  display:flex !important;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+}
+.top-lv{
+  margin-left:4px;
+  padding:2px 5px;
+  font-size:9px;
+}
+
+@media(min-width:901px){
+  .rowname .boss-title{
+    font-size:15px !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+  }
+  .rowname .lvbadge{
+    flex:0 0 auto;
+    font-size:10px;
+    padding:3px 8px;
+  }
+}
+
+@media(max-width:900px){
+  .rowname .boss-title{
+    white-space:nowrap !important;
+    overflow:hidden !important;
+  }
+  .rowname .lvbadge{
+    flex:0 0 auto;
+    margin-left:3px;
+    padding:1px 4px;
+    font-size:7px;
+  }
+  .top-lv{
+    margin-left:2px;
+    padding:1px 4px;
+    font-size:7px;
+  }
+}
