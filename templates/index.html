@@ -113,6 +113,19 @@ const BOSS_LOCATIONS={
 
 let currentFilter='all';
 let currentSearch='';
+const BOSS_LEVELS={
+  '베나투스':60,'비오렌트':65,'클레멘티스':70,'에고':70,'리베라':75,'아라네오':75,
+  '사피루스':80,'언두미엘':80,'네우트로':80,'레이디달리아':85,'튀멜레':85,'장군아쿨레우스':85,
+  '아멘티스':88,'남작브라우드모어':88,'밀라베':90,'와니타스':93,'메투스':93,'듀플리칸':93,
+  '링고르':95,'슈라이어':95,'로데릭':95,'가레스':98,'티토르':98,'라르바':98,
+  '아우라크':100,'카테나':100,'세크레타':100,'오르도':100,'아스타':100,'수포르':100,
+  '샤이프락':120,'벤지':120,'리비티나':130,'라카제스':130,'카밀리아':135,'익시온':135,
+  '투미어':140,'네루카스':140,'두멘타':140
+};
+function bossLevel(name){
+  const lv=BOSS_LEVELS[name];
+  return lv ? `Lv.${lv}` : '';
+}
 function bossLocation(name){ return BOSS_LOCATIONS[name] || '위치 미등록'; }
 function favoriteSet(){
   try{return new Set(JSON.parse(localStorage.bossFavorites||'[]'))}
@@ -131,7 +144,7 @@ function matchesBoss(b){
   if(currentFilter==='favorite' && !isFavorite(b.id)) return false;
   const q=currentSearch.trim().toLowerCase();
   if(!q) return true;
-  return b.name.toLowerCase().includes(q) || bossLocation(b.name).toLowerCase().includes(q);
+  return b.name.toLowerCase().includes(q) || bossLocation(b.name).toLowerCase().includes(q) || bossLevel(b.name).toLowerCase().includes(q);
 }
 const $=id=>document.getElementById(id); function toast(s){$('toast').textContent=s;$('toast').className='show';setTimeout(()=>$('toast').className='',1800)}
 function pad(n){return String(n).padStart(2,'0')} function fmt(i){if(!i)return '-';let d=new Date(i);return `${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
@@ -193,7 +206,7 @@ async function refresh(){
     <article class="topcard ${statusClass(b.remain_seconds)}">
       <div class="topicon">${bossIcon(b)}</div>
       <div class="topmain">
-        <div class="topname">${b.name}</div>
+        <div class="topname">${b.name}${bossLevel(b.name)?` <span class="lvbadge top-lv">${bossLevel(b.name)}</span>`:""}</div>
         <div class="toplocation">📍 ${bossLocation(b.name)}</div>
         <div class="topnext">다음 젠 <b>${fmt(b.next_spawn)}</b></div>
         <div class="toprule">${ruleText(b)}</div>
@@ -211,7 +224,7 @@ async function refresh(){
       <div class="rank">${idx+1}</div>
       <div class="rowicon">${bossIcon(b)}</div>
       <div class="rowname">
-        <b>${b.name}</b>
+        <b class="boss-title">${b.name}${bossLevel(b.name)?` <span class="lvbadge">${bossLevel(b.name)}</span>`:""}</b>
         <span class="rowlocation">📍 ${bossLocation(b.name)}</span>
         <span class="rowrule">${ruleText(b)}</span>
       </div>
